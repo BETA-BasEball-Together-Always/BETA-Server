@@ -1,4 +1,4 @@
-package com.beta.common.entity;
+package com.beta.infra.common.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

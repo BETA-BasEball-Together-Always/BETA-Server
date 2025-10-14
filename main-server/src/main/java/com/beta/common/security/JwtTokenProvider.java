@@ -24,36 +24,53 @@ public class JwtTokenProvider {
         this.accessTokenExpiration = accessTokenExpiration;
     }
 
-    public String generateAccessToken(Long userId, String role) {
+    public String generateSignupPendingToken(String socialId, String provider, String gender, String ageRange) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
-        
+        Date expiryDate = new Date(now.getTime() + 6000000);
+
         return Jwts.builder()
-                .claim("userId", userId)
-                .claim("role", role)
-                .subject(String.valueOf(userId))
+                .subject(socialId)
+                .claim("type", "SIGNUP_PENDING")
+                .claim("provider", provider)
+                .claim("gender", gender)
+                .claim("ageRange", ageRange)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(secretKey)
                 .compact();
     }
 
-    public Long getUserId(String token) {
+    public String generateAccessToken(Long userId, String favoriteTeamCode, String role) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
+        
+        return Jwts.builder()
+                .subject(String.valueOf(userId))
+                .claim("type", "ACCESS")
+                .claim("teamCode", favoriteTeamCode)
+                .claim("role", role)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(secretKey)
+                .compact();
+    }
+
+    public String getSubject(String token) {
         try {
             Claims claims = getClaims(token);
-            return claims.get("userId", Long.class);
+            return claims.getSubject();
         } catch (Exception e) {
-            log.error("Failed to extract user ID from token", e);
+            log.error("Failed to extract subject from token", e);
             return null;
         }
     }
 
-    public String getRole(String token) {
+    public <T> T getClaim(String token, String claimName, Class<T> clazz) {
         try {
             Claims claims = getClaims(token);
-            return claims.get("role", String.class);
+            return claims.get(claimName, clazz);
         } catch (Exception e) {
-            log.error("Failed to extract role from token", e);
+            log.error("Failed to extract claim '{}' from token", claimName, e);
             return null;
         }
     }
@@ -61,7 +78,7 @@ public class JwtTokenProvider {
     public boolean isTokenValid(String token) {
         try {
             Claims claims = getClaims(token);
-            return !isTokenExpired(token) && claims.get("userId") != null;
+            return !isTokenExpired(token) && claims.getSubject() != null;
         } catch (Exception e) {
             log.debug("Token validation failed", e);
             return false;

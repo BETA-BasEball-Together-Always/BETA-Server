@@ -34,7 +34,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 인증이 필요하지 않은 공개 API
                 .requestMatchers(
-                    "/api/auth/login/**"     // 소셜 로그인
+                        "/api/auth/login/**",     // 소셜 로그인
+                        "/api/auth/refresh",   // 토큰 재발급
+                        "/api/auth/signup/complete"
                 ).permitAll()
                 // 그 외 모든 요청은 인증 필요
                 .anyRequest().authenticated()
