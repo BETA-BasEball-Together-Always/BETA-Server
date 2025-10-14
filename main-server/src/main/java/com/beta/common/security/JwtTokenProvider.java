@@ -24,12 +24,29 @@ public class JwtTokenProvider {
         this.accessTokenExpiration = accessTokenExpiration;
     }
 
-    public String generateAccessToken(Long userId, String role) {
+    public String generateSignupPendingToken(String socialId, String provider, String name) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + 6000000);
+
+        return Jwts.builder()
+                .subject(socialId)
+                .claim("type", "SIGNUP_PENDING")
+                .claim("provider", provider)
+                .claim("name", name)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(secretKey)
+                .compact();
+    }
+
+    public String generateAccessToken(Long userId, String favoriteTeamCode, String role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
         
         return Jwts.builder()
-                .claim("userId", userId)
+                .subject(String.valueOf(userId))
+                .claim("type", "ACCESS")
+                .claim("teamCode", favoriteTeamCode)
                 .claim("role", role)
                 .subject(String.valueOf(userId))
                 .issuedAt(now)
