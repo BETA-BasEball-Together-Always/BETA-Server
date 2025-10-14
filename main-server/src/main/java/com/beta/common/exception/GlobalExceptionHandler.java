@@ -36,6 +36,83 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 소셜 로그인 토큰 무효
+     */
+    @ExceptionHandler(InvalidSocialTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidSocialTokenException(InvalidSocialTokenException e) {
+        log.warn("Invalid social token: {}", e.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_SOCIAL_TOKEN);
+        return ResponseEntity.status(ErrorCode.INVALID_SOCIAL_TOKEN.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 소셜 API 호출 오류
+     */
+    @ExceptionHandler(SocialApiException.class)
+    public ResponseEntity<ErrorResponse> handleSocialApiException(SocialApiException e) {
+        log.error("Social API error: {}", e.getMessage(), e);
+        
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.SOCIAL_API_ERROR);
+        return ResponseEntity.status(ErrorCode.SOCIAL_API_ERROR.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 유효하지 않은 토큰
+     */
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTokenException(InvalidTokenException e) {
+        log.warn("Invalid token: {}", e.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_TOKEN);
+        return ResponseEntity.status(ErrorCode.INVALID_TOKEN.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 만료된 토큰
+     */
+    @ExceptionHandler(ExpiredTokenException.class)
+    public ResponseEntity<ErrorResponse> handleExpiredTokenException(ExpiredTokenException e) {
+        log.warn("Expired token: {}", e.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.EXPIRED_TOKEN);
+        return ResponseEntity.status(ErrorCode.EXPIRED_TOKEN.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 사용자를 찾을 수 없음
+     */
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException e) {
+        log.warn("User not found: {}", e.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.USER_NOT_FOUND);
+        return ResponseEntity.status(ErrorCode.USER_NOT_FOUND.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 탈퇴한 사용자
+     */
+    @ExceptionHandler(UserWithdrawnException.class)
+    public ResponseEntity<ErrorResponse> handleUserWithdrawnException(UserWithdrawnException e) {
+        log.warn("Withdrawn user tried to access: {}", e.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.USER_WITHDRAWN);
+        return ResponseEntity.status(ErrorCode.USER_WITHDRAWN.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 정지된 사용자
+     */
+    @ExceptionHandler(UserSuspendedException.class)
+    public ResponseEntity<ErrorResponse> handleUserSuspendedException(UserSuspendedException e) {
+        log.warn("Suspended user tried to access: {}", e.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.USER_SUSPENDED);
+        return ResponseEntity.status(ErrorCode.USER_SUSPENDED.getStatus()).body(errorResponse);
+    }
+
+    /**
      * Exception 처리 (최상위 예외 - 모든 예외 처리)
      */
     @ExceptionHandler(Exception.class)
