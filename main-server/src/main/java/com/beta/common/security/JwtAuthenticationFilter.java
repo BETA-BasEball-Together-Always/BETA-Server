@@ -49,21 +49,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
                 
                 // 4. 토큰에서 사용자 ID와 role 추출
-                Long userId = jwtTokenProvider.getUserId(token);
-                String role = jwtTokenProvider.getRole(token);
-                
+                String userId = jwtTokenProvider.getSubject(token);
+                String role = jwtTokenProvider.getClaim(token, "role", String.class);
+
                 if (userId != null && role != null) {
                     // 5. Spring Security 인증 객체 생성 (CustomUserDetails 사용)
-                    CustomUserDetails userDetails = new CustomUserDetails(userId, role);
-                    UsernamePasswordAuthenticationToken authentication = 
+                    CustomUserDetails userDetails = new CustomUserDetails(Long.valueOf(userId), role);
+                    UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                             userDetails,
-                            null, 
+                            null,
                             userDetails.getAuthorities()
                         );
-                    
+
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    
+
                     // 6. SecurityContext에 인증 정보 설정
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     
@@ -113,6 +113,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 인증이 필요하지 않은 경로들
         return path.startsWith("/api/auth/login/kakao") ||
-               path.startsWith("/api/auth/login/naver");
+               path.startsWith("/api/auth/login/naver") ||
+               path.startsWith("/api/auth/signup/complete") ||  // 회원가입 완료도 제외
+               path.startsWith("/api/auth/refresh");              // 리프레시도 제외
     }
 }
