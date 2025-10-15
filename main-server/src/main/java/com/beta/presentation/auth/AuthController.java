@@ -1,6 +1,6 @@
 package com.beta.presentation.auth;
 
-import com.beta.application.auth.SocialLoginService;
+import com.beta.application.auth.facade.SocialAuthFacade;
 import com.beta.application.auth.dto.LoginResult;
 import com.beta.common.provider.SocialProvider;
 import com.beta.common.security.CustomUserDetails;
@@ -20,18 +20,18 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final SocialLoginService socialLoginService;
+    private final SocialAuthFacade socialAuthFacade;
 
     @PostMapping("/login/kakao")
     public ResponseEntity<SocialLoginResponse> kakaoLogin(@Valid @RequestBody SocialLoginRequest request) {
-        LoginResult result = socialLoginService.processSocialLogin(request.getToken(), SocialProvider.KAKAO);
+        LoginResult result = socialAuthFacade.processSocialLogin(request.getToken(), SocialProvider.KAKAO);
         SocialLoginResponse response = convertToResponse(result);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login/naver")
     public ResponseEntity<SocialLoginResponse> naverLogin(@Valid @RequestBody SocialLoginRequest request) {
-        LoginResult result = socialLoginService.processSocialLogin(request.getToken(), SocialProvider.NAVER);
+        LoginResult result = socialAuthFacade.processSocialLogin(request.getToken(), SocialProvider.NAVER);
         SocialLoginResponse response = convertToResponse(result);
         return ResponseEntity.ok(response);
     }
