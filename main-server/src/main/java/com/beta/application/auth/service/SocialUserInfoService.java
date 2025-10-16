@@ -10,12 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class FindSocialService {
+public class SocialUserInfoService {
 
     private final SocialLoginClientFactory clientFactory;
 
     @Transactional(readOnly = true)
-    public SocialUserInfo getSocialUserInfo(String token, SocialProvider socialProvider) {
+    public SocialUserInfo fetchSocialUserInfo(String token, SocialProvider socialProvider) {
         SocialLoginClient client = clientFactory.getClient(socialProvider);
         return client.getUserInfo(token);
     }

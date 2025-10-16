@@ -15,16 +15,12 @@ public class RefreshTokenService {
     private final RefreshTokenJpaRepository refreshTokenJpaRepository;
 
     @Transactional
-    public void saveRefreshToken(Long userId, String refreshToken) {
+    public void upsertRefreshToken(Long userId, String refreshToken) {
+        refreshTokenJpaRepository.deleteByUserId(userId);
         refreshTokenJpaRepository.save(RefreshTokenEntity.builder()
                 .userId(userId)
                 .token(refreshToken)
                 .expiresAt(LocalDateTime.now().plusMonths(1))
                 .build());
-    }
-
-    @Transactional
-    public void deleteRefreshToken(Long userId) {
-        refreshTokenJpaRepository.deleteByUserId(userId);
     }
 }

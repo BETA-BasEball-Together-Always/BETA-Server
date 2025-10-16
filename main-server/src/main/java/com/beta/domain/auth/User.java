@@ -12,6 +12,7 @@ public class User {
     private String name;
     private SocialProvider socialProvider;
     private String favoriteTeamCode;
+    private String favoriteTeamName;
     private String gender;
     private String ageRange;
     private String status;

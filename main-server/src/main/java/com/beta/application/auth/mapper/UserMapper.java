@@ -1,11 +1,13 @@
 package com.beta.application.auth.mapper;
 
+import com.beta.application.auth.dto.TeamDto;
 import com.beta.application.auth.dto.UserDto;
-import com.beta.common.exception.UserSuspendedException;
-import com.beta.common.exception.UserWithdrawnException;
 import com.beta.domain.auth.User;
 import com.beta.infra.auth.entity.UserEntity;
+import com.beta.infra.common.entity.BaseballTeamEntity;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class UserMapper {
@@ -19,25 +21,26 @@ public class UserMapper {
                 .socialId(entity.getSocialId())
                 .name(entity.getName())
                 .socialProvider(entity.getSocialProvider())
-                .favoriteTeamCode(entity.getFavoriteTeamCode())
+                .favoriteTeamCode(entity.getBaseballTeam().getCode())
+                .favoriteTeamName(entity.getBaseballTeam().getTeamNameKr())
                 .status(entity.getStatus().name())
                 .role(entity.getRole().name())
                 .build();
     }
 
-    public static UserEntity toEntity(User domain) {
-        if (domain == null) {
+    public static UserEntity toEntity(UserDto dto, BaseballTeamEntity baseballTeamEntity) {
+        if (dto == null) {
             return null;
         }
 
-        UserEntity.GenderType genderType = getGenderType(domain);
-        UserEntity.AgeRange ageRange = getAgeRange(domain);
+        UserEntity.GenderType genderType = getGenderType(dto);
+        UserEntity.AgeRange ageRange = getAgeRange(dto);
 
         return UserEntity.builder()
-                .socialId(domain.getSocialId())
-                .name(domain.getName())
-                .socialProvider(domain.getSocialProvider())
-                .favoriteTeamCode(domain.getFavoriteTeamCode())
+                .socialId(dto.getSocialId())
+                .name(dto.getName())
+                .socialProvider(dto.getSocialProvider())
+                .baseballTeam(baseballTeamEntity)
                 .gender(genderType)
                 .ageRange(ageRange)
                 .build();
@@ -50,21 +53,47 @@ public class UserMapper {
                 .name(user.getName())
                 .socialProvider(user.getSocialProvider())
                 .favoriteTeamCode(user.getFavoriteTeamCode())
+                .favoriteTeamName(user.getFavoriteTeamName())
+                .role(user.getRole())
                 .build();
     }
 
-    private static UserEntity.GenderType getGenderType(User domain) {
+    public static UserDto toDto(UserEntity user) {
+        return UserDto.builder()
+                .id(user.getId())
+                .socialId(user.getSocialId())
+                .name(user.getName())
+                .socialProvider(user.getSocialProvider())
+                .favoriteTeamCode(user.getBaseballTeam().getCode())
+                .favoriteTeamName(user.getBaseballTeam().getTeamNameKr())
+                .role(user.getRole().name())
+                .gender(user.getGender() != null ? user.getGender().name() : null)
+                .ageRange(user.getAgeRange() != null ? user.getAgeRange().name() : null)
+                .build();
+    }
+
+    public static List<TeamDto> teamList(List<BaseballTeamEntity> baseballTeamEntityList) {
+        return baseballTeamEntityList.stream()
+                .map(teamEntity -> TeamDto.builder()
+                        .teamCode(teamEntity.getCode())
+                        .teamNameKr(teamEntity.getTeamNameKr())
+                        .teamNameEn(teamEntity.getTeamNameEn())
+                        .build())
+                .toList();
+    }
+
+    private static UserEntity.GenderType getGenderType(UserDto dto) {
         UserEntity.GenderType genderType = null;
-        if(domain.getGender() != null) {
-            genderType = domain.getGender().toLowerCase().startsWith("m") ? UserEntity.GenderType.M : UserEntity.GenderType.F;
+        if(dto.getGender() != null) {
+            genderType = dto.getGender().toLowerCase().startsWith("m") ? UserEntity.GenderType.M : UserEntity.GenderType.F;
         }
         return genderType;
     }
 
-    private static UserEntity.AgeRange getAgeRange(User domain) {
+    private static UserEntity.AgeRange getAgeRange(UserDto dto) {
         UserEntity.AgeRange ageRange = null;
-        if(domain.getAgeRange() != null) {
-            ageRange = switch (domain.getAgeRange()) {
+        if(dto.getAgeRange() != null) {
+            ageRange = switch (dto.getAgeRange()) {
                 case "0-9" -> UserEntity.AgeRange.AGE_0_9;
                 case "10-19" -> UserEntity.AgeRange.AGE_10_19;
                 case "20-29" -> UserEntity.AgeRange.AGE_20_29;
