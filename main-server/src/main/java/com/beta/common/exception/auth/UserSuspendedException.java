@@ -1,4 +1,4 @@
-package com.beta.common.exception;
+package com.beta.common.exception.auth;
 
 /**
  * 정지된 사용자에 대한 예외

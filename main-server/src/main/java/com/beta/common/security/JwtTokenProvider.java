@@ -30,10 +30,10 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .subject(socialId)
-                .claim("type", "SIGNUP_PENDING")
-                .claim("provider", provider)
-                .claim("gender", gender)
-                .claim("ageRange", ageRange)
+                .claim(ClaimEnum.TYPE.name(), "SIGNUP_PENDING")
+                .claim(ClaimEnum.PROVIDER.name(), provider)
+                .claim(ClaimEnum.GENDER.name(), gender)
+                .claim(ClaimEnum.AGE_RANGE.name(), ageRange)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(secretKey)
@@ -46,9 +46,9 @@ public class JwtTokenProvider {
         
         return Jwts.builder()
                 .subject(String.valueOf(userId))
-                .claim("type", "ACCESS")
-                .claim("teamCode", favoriteTeamCode)
-                .claim("role", role)
+                .claim(ClaimEnum.TYPE.name(), "ACCESS")
+                .claim(ClaimEnum.TEAM_CODE.name(), favoriteTeamCode)
+                .claim(ClaimEnum.ROLE.name(), role)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(secretKey)
@@ -101,5 +101,9 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public enum ClaimEnum {
+        TYPE, TEAM_CODE, ROLE, PROVIDER, GENDER, AGE_RANGE
     }
 }

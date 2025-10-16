@@ -16,7 +16,6 @@ public class SignupCompleteRequest {
     @NotBlank(message = "응원팀 코드는 필수입니다")
     private String favoriteTeamCode;
 
-    @NotBlank(message = "필수 동의 항목입니다")
     private Boolean agreePersonalInfo;
 
     private Boolean agreeMarketing;

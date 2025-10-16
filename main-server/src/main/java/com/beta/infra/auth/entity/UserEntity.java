@@ -2,6 +2,7 @@ package com.beta.infra.auth.entity;
 
 import com.beta.common.provider.SocialProvider;
 import com.beta.infra.common.entity.BaseEntity;
+import com.beta.infra.common.entity.BaseballTeamEntity;
 import com.nimbusds.openid.connect.sdk.claims.Gender;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,8 +31,9 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false, length = 10)
     private UserRole role;
 
-    @Column(name = "favorite_team_code", length = 10)
-    private String favoriteTeamCode;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "favorite_team_code", referencedColumnName = "code", nullable = false)
+    private BaseballTeamEntity baseballTeam;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender", length = 5)
@@ -42,13 +44,13 @@ public class UserEntity extends BaseEntity {
     private AgeRange ageRange;
 
     @Builder
-    public UserEntity(String socialId, String name, SocialProvider socialProvider, UserStatus status, UserRole role, String favoriteTeamCode, GenderType gender, AgeRange ageRange) {
+    public UserEntity(String socialId, String name, SocialProvider socialProvider, UserStatus status, UserRole role, BaseballTeamEntity baseballTeam, GenderType gender, AgeRange ageRange) {
         this.socialId = socialId;
         this.name = name;
         this.socialProvider = socialProvider;
         this.status = status != null ? status : UserStatus.ACTIVE;
         this.role = role != null ? role : UserRole.USER;
-        this.favoriteTeamCode = favoriteTeamCode;
+        this.baseballTeam = baseballTeam;
         this.gender = gender;
         this.ageRange = ageRange;
     }

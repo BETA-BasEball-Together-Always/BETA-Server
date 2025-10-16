@@ -1,4 +1,4 @@
-package com.beta.common.exception;
+package com.beta.common.exception.auth;
 
 /**
  * 유효하지 않은 토큰에 대한 예외

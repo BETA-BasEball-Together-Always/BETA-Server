@@ -1,4 +1,4 @@
-package com.beta.common.exception;
+package com.beta.common.exception.auth;
 
 /**
  * 탈퇴한 사용자에 대한 예외

@@ -25,21 +25,22 @@ public class AuthController {
     @PostMapping("/login/kakao")
     public ResponseEntity<SocialLoginResponse> kakaoLogin(@Valid @RequestBody SocialLoginRequest request) {
         LoginResult result = socialAuthFacade.processSocialLogin(request.getToken(), SocialProvider.KAKAO);
-        SocialLoginResponse response = convertToResponse(result);
+        SocialLoginResponse response = toResponse(result);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login/naver")
     public ResponseEntity<SocialLoginResponse> naverLogin(@Valid @RequestBody SocialLoginRequest request) {
         LoginResult result = socialAuthFacade.processSocialLogin(request.getToken(), SocialProvider.NAVER);
-        SocialLoginResponse response = convertToResponse(result);
+        SocialLoginResponse response = toResponse(result);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/signup/complete")
     public ResponseEntity<SocialLoginResponse> completeSignup(@Valid @RequestBody SignupCompleteRequest request) {
-        // TODO: 회원가입 완료 로직 구현
-        return ResponseEntity.ok(null);
+        LoginResult result = socialAuthFacade.completeSignup(request);
+        SocialLoginResponse response = toResponse(result);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/refresh")
@@ -54,7 +55,7 @@ public class AuthController {
         return ResponseEntity.ok("");
     }
 
-    private SocialLoginResponse convertToResponse(LoginResult result) {
+    private SocialLoginResponse toResponse(LoginResult result) {
         return SocialLoginResponse.ofLoginResult(result);
     }
 }

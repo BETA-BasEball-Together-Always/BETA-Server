@@ -1,10 +1,11 @@
 package com.beta.common.exception;
 
-import com.beta.common.response.ErrorResponse;
+import com.beta.common.exception.auth.*;
+import com.beta.common.exception.team.TeamNotFoundException;
+import com.beta.presentation.common.response.ErrorResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -33,6 +34,17 @@ public class GlobalExceptionHandler {
         
         ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.VALIDATION_FAILED, fieldErrors);
         return ResponseEntity.status(ErrorCode.VALIDATION_FAILED.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 개인정보 동의 필수 항목 누락
+     */
+    @ExceptionHandler(PersonalInfoAgreementRequiredException.class)
+    public ResponseEntity<ErrorResponse> handlePersonalInfoAgreementRequiredException(PersonalInfoAgreementRequiredException e) {
+        log.warn("Personal info agreement required: {}", e.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.PERSONAL_INFO_AGREEMENT_REQUIRED);
+        return ResponseEntity.status(ErrorCode.PERSONAL_INFO_AGREEMENT_REQUIRED.getStatus()).body(errorResponse);
     }
 
     /**
@@ -85,9 +97,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException e) {
         log.warn("User not found: {}", e.getMessage());
-        
+
         ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.USER_NOT_FOUND);
         return ResponseEntity.status(ErrorCode.USER_NOT_FOUND.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 구단을 찾을 수 없음
+     */
+    @ExceptionHandler(TeamNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTeamNotFoundException(TeamNotFoundException e) {
+        log.warn("Team not found: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.TEAM_NOT_FOUND);
+        return ResponseEntity.status(ErrorCode.TEAM_NOT_FOUND.getStatus()).body(errorResponse);
     }
 
     /**
@@ -96,7 +119,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserWithdrawnException.class)
     public ResponseEntity<ErrorResponse> handleUserWithdrawnException(UserWithdrawnException e) {
         log.warn("Withdrawn user tried to access: {}", e.getMessage());
-        
+
         ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.USER_WITHDRAWN);
         return ResponseEntity.status(ErrorCode.USER_WITHDRAWN.getStatus()).body(errorResponse);
     }

@@ -1,7 +1,7 @@
 package com.beta.common.security;
 
 import com.beta.common.exception.ErrorCode;
-import com.beta.common.response.ErrorResponse;
+import com.beta.presentation.common.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -50,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 
                 // 4. 토큰에서 사용자 ID와 role 추출
                 String userId = jwtTokenProvider.getSubject(token);
-                String role = jwtTokenProvider.getClaim(token, "role", String.class);
+                String role = jwtTokenProvider.getClaim(token, JwtTokenProvider.ClaimEnum.ROLE.name(), String.class);
 
                 if (userId != null && role != null) {
                     // 5. Spring Security 인증 객체 생성 (CustomUserDetails 사용)
