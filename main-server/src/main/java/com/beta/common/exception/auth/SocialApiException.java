@@ -1,4 +1,4 @@
-package com.beta.common.exception;
+package com.beta.common.exception.auth;
 
 public class SocialApiException extends RuntimeException {
     

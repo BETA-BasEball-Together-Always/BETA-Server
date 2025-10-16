@@ -1,7 +1,6 @@
 package com.beta.application.auth.dto;
 
 import com.beta.common.provider.SocialProvider;
-import com.beta.domain.auth.User;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,4 +12,8 @@ public class UserDto {
     private String name;
     private SocialProvider socialProvider;
     private String favoriteTeamCode;
+    private String favoriteTeamName;
+    private String role;
+    private String gender;
+    private String ageRange;
 }

@@ -1,9 +1,12 @@
 package com.beta.presentation.auth.response;
 
 import com.beta.application.auth.dto.LoginResult;
+import com.beta.application.auth.dto.TeamDto;
 import com.beta.application.auth.dto.UserDto;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.List;
 
 @Getter
 @Builder
@@ -16,7 +19,7 @@ public class SocialLoginResponse {
         if (loginResult.isNewUser()) {
             return SocialLoginResponse.builder()
                     .isNewUser(true)
-                    .userResponse(new NewUserResponse(loginResult.getSignupToken()))
+                    .userResponse(new NewUserResponse(loginResult.getSignupToken(), loginResult.getTeamList()))
                     .build();
         } else {
             return SocialLoginResponse.builder()
@@ -31,25 +34,6 @@ public class SocialLoginResponse {
     }
 
     private interface UserResponse {}
-
-    @Getter
-    private static class NewUserResponse implements UserResponse {
-        private final String signupToken;
-        public NewUserResponse(String signupToken) {
-            this.signupToken = signupToken;
-        }
-    }
-
-    @Getter
-    private static class ExistingUserResponse implements UserResponse {
-        private final String accessToken;
-        private final String refreshToken;
-        private final UserDto user;
-
-        public ExistingUserResponse(String accessToken, String refreshToken, UserDto user) {
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-            this.user = user;
-        }
-    }
+    private record NewUserResponse(String signupToken, List<TeamDto> teamList) implements UserResponse {}
+    private record ExistingUserResponse(String accessToken, String refreshToken, UserDto user) implements UserResponse {}
 }

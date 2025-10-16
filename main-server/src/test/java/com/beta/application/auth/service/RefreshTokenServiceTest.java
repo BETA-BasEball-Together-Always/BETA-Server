@@ -23,16 +23,11 @@ class RefreshTokenServiceTest {
     private RefreshTokenService refreshTokenService;
 
     @Test
-    @DisplayName("RefreshTokenJpaRepository save 메서드가 호출된다.")
+    @DisplayName("RefreshTokenJpaRepository delete, save 메서드가 호출된다.")
     void saveRefreshToken() {
-        refreshTokenService.saveRefreshToken(1L, "sample_refresh_token");
-        verify(refreshTokenJpaRepository).save(any(RefreshTokenEntity.class));
-    }
+        refreshTokenService.upsertRefreshToken(1L, "sample_refresh_token");
 
-    @Test
-    @DisplayName("RefreshTokenJpaRepository deleteByUserId 메서드가 호출된다.")
-    void deleteRefreshToken() {
-        refreshTokenService.deleteRefreshToken(1L);
         verify(refreshTokenJpaRepository).deleteByUserId(1L);
+        verify(refreshTokenJpaRepository).save(any(RefreshTokenEntity.class));
     }
 }

@@ -1,4 +1,4 @@
-package com.beta.common.exception;
+package com.beta.common.exception.auth;
 
 /**
  * 사용자를 찾을 수 없을 때의 예외

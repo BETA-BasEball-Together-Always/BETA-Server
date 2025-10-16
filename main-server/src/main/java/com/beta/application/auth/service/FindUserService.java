@@ -1,7 +1,8 @@
 package com.beta.application.auth.service;
 
+import com.beta.application.auth.mapper.UserMapper;
 import com.beta.common.provider.SocialProvider;
-import com.beta.infra.auth.entity.UserEntity;
+import com.beta.domain.auth.User;
 import com.beta.infra.auth.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,7 @@ public class FindUserService {
     private final UserJpaRepository userJpaRepository;
 
     @Transactional(readOnly = true)
-    public UserEntity findUserBySocialId(String socialId, SocialProvider socialProvider) {
-        return userJpaRepository.findBySocialIdAndSocialProvider(socialId, socialProvider).orElse(null);
+    public User findUserBySocialId(String socialId, SocialProvider socialProvider) {
+        return UserMapper.toDomain(userJpaRepository.findBySocialIdAndSocialProvider(socialId, socialProvider).orElse(null));
     }
 }

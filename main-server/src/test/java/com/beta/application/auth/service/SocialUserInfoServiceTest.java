@@ -19,8 +19,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("FindSocialService 테스트")
-class FindSocialServiceTest {
+@DisplayName("SocialUserInfoService 테스트")
+class SocialUserInfoServiceTest {
 
     @Mock
     private NaverLoginClient naverLoginClient;
@@ -29,7 +29,7 @@ class FindSocialServiceTest {
     private KakaoLoginClient kakaoLoginClient;
 
     private SocialLoginClientFactory clientFactory;
-    private FindSocialService findSocialService;
+    private SocialUserInfoService socialUserInfoService;
 
     @BeforeEach
     void setUp() {
@@ -37,7 +37,7 @@ class FindSocialServiceTest {
                 List.of(naverLoginClient, kakaoLoginClient)
         );
 
-        findSocialService = new FindSocialService(clientFactory);
+        socialUserInfoService = new SocialUserInfoService(clientFactory);
     }
 
     @Test
@@ -55,7 +55,7 @@ class FindSocialServiceTest {
         when(naverLoginClient.getUserInfo(token)).thenReturn(expectedUserInfo);
 
         // when
-        SocialUserInfo result = findSocialService.getSocialUserInfo(token, SocialProvider.NAVER);
+        SocialUserInfo result = socialUserInfoService.fetchSocialUserInfo(token, SocialProvider.NAVER);
 
         // then
         assertThat(result.getSocialId()).isEqualTo("naver123");
@@ -78,7 +78,7 @@ class FindSocialServiceTest {
         when(kakaoLoginClient.getUserInfo(token)).thenReturn(expectedUserInfo);
 
         // when
-        SocialUserInfo result = findSocialService.getSocialUserInfo(token, SocialProvider.KAKAO);
+        SocialUserInfo result = socialUserInfoService.fetchSocialUserInfo(token, SocialProvider.KAKAO);
 
         // then
         assertThat(result.getSocialId()).isEqualTo("kakao456");

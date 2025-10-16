@@ -1,4 +1,4 @@
-package com.beta.common.response;
+package com.beta.presentation.common.response;
 
 import com.beta.common.exception.ErrorCode;
 import lombok.Builder;

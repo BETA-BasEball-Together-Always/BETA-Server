@@ -1,4 +1,4 @@
-package com.beta.common.exception;
+package com.beta.common.exception.auth;
 
 /**
  * 만료된 토큰에 대한 예외

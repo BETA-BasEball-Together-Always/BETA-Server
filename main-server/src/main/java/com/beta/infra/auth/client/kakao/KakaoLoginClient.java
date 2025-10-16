@@ -1,7 +1,7 @@
 package com.beta.infra.auth.client.kakao;
 
-import com.beta.common.exception.InvalidSocialTokenException;
-import com.beta.common.exception.SocialApiException;
+import com.beta.common.exception.auth.InvalidSocialTokenException;
+import com.beta.common.exception.auth.SocialApiException;
 import com.beta.common.provider.SocialProvider;
 import com.beta.infra.auth.client.SocialLoginClient;
 import com.beta.infra.auth.client.SocialUserInfo;
