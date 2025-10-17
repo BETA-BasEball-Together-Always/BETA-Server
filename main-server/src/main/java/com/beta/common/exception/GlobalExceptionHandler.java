@@ -17,6 +17,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(NameDuplicateException.class)
+    public ResponseEntity<ErrorResponse> handleNameDuplicateException(NameDuplicateException e) {
+        log.warn("Name duplicate exception: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.NAME_DUPLICATE);
+        return ResponseEntity.status(ErrorCode.NAME_DUPLICATE.getStatus()).body(errorResponse);
+    }
+
     /**
      * @Valid 어노테이션으로 validation이 실패한 경우
      */

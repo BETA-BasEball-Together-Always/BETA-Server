@@ -7,6 +7,7 @@ import com.beta.common.security.CustomUserDetails;
 import com.beta.presentation.auth.request.RefreshTokenRequest;
 import com.beta.presentation.auth.request.SignupCompleteRequest;
 import com.beta.presentation.auth.request.SocialLoginRequest;
+import com.beta.presentation.auth.response.NameDuplicateResponse;
 import com.beta.presentation.auth.response.SocialLoginResponse;
 import com.beta.presentation.auth.response.TokenResponse;
 import jakarta.validation.Valid;
@@ -41,6 +42,12 @@ public class AuthController {
         LoginResult result = socialAuthFacade.completeSignup(request);
         SocialLoginResponse response = toResponse(result);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/name/check")
+    public ResponseEntity<NameDuplicateResponse> checkNameDuplicate(@RequestParam("name") String name) {
+        boolean isDuplicate = socialAuthFacade.isNameDuplicate(name);
+        return ResponseEntity.ok(NameDuplicateResponse.builder().duplicate(isDuplicate).build());
     }
 
     @PostMapping("/refresh")
