@@ -9,6 +9,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.mockito.Mockito.verify;
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FindUserService 테스트")
 class FindUserServiceTest {
@@ -22,8 +24,26 @@ class FindUserServiceTest {
     @Test
     @DisplayName("findBySocialIdAndSocialProvider 메서드가 호출된다.")
     void findUserBySocialId() {
+        // given
         String socialId = "sample_social_id";
+
+        // when
         findUserService.findUserBySocialId(socialId, SocialProvider.KAKAO);
-        userJpaRepository.findBySocialIdAndSocialProvider(socialId, SocialProvider.KAKAO);
+
+        // then
+        verify(userJpaRepository).findBySocialIdAndSocialProvider(socialId, SocialProvider.KAKAO);
+    }
+
+    @Test
+    @DisplayName("existsByName 메서드가 호출된다.")
+    void isNameDuplicate() {
+        // given
+        String name = "sample_name";
+
+        // when
+        findUserService.isNameDuplicate(name);
+
+        // then
+        verify(userJpaRepository).existsByName(name);
     }
 }
