@@ -1,5 +1,6 @@
 package com.beta.domain.auth.service;
 
+import com.beta.common.exception.auth.NameDuplicateException;
 import com.beta.common.exception.auth.PersonalInfoAgreementRequiredException;
 import com.beta.common.exception.auth.UserSuspendedException;
 import com.beta.common.exception.auth.UserWithdrawnException;
@@ -26,6 +27,12 @@ public class SocialUserStatusService {
     public void validateAgreePersonalInfo(Boolean agreePersonalInfo) {
         if(agreePersonalInfo == null || !agreePersonalInfo){
             throw new PersonalInfoAgreementRequiredException("개인정보 수집 및 이용에 동의하셔야 회원가입이 가능합니다.");
+        }
+    }
+
+    public void validateNameDuplicate(boolean nameDuplicate) {
+        if(nameDuplicate){
+            throw new NameDuplicateException("이미 존재하는 이름입니다.");
         }
     }
 }

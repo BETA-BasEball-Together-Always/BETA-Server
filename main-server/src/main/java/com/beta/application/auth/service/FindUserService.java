@@ -18,4 +18,9 @@ public class FindUserService {
     public User findUserBySocialId(String socialId, SocialProvider socialProvider) {
         return UserMapper.toDomain(userJpaRepository.findBySocialIdAndSocialProvider(socialId, socialProvider).orElse(null));
     }
+
+    @Transactional(readOnly = true)
+    public boolean isNameDuplicate(String name) {
+        return userJpaRepository.existsByName(name);
+    }
 }

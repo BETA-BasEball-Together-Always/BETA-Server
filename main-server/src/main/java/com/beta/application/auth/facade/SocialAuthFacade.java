@@ -53,11 +53,16 @@ public class SocialAuthFacade {
     @Transactional
     public LoginResult completeSignup(SignupCompleteRequest request) {
         socialUserStatusService.validateAgreePersonalInfo(request.getAgreePersonalInfo());
+        socialUserStatusService.validateNameDuplicate(findUserService.isNameDuplicate(request.getName()));
 
         UserDto userDto = getSocialUserInfo(request);
         UserDto savedUser = saveUserService.saveUser(userDto, findTeamService.getBaseballTeamById(request.getFavoriteTeamCode()));
         saveUserService.saveAgreements(request.getAgreeMarketing(), request.getAgreePersonalInfo(), savedUser.getId());
         return createLoginResult(savedUser.getId(), savedUser.getFavoriteTeamCode(), savedUser.getRole(), savedUser);
+    }
+
+    public boolean isNameDuplicate(String name) {
+        return findUserService.isNameDuplicate(name);
     }
 
     private UserDto getSocialUserInfo(SignupCompleteRequest request) {

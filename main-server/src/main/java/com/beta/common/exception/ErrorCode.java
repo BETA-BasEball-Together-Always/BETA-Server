@@ -31,7 +31,7 @@ public enum ErrorCode {
     USER_NOT_FOUND("USER001", "사용자를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     USER_WITHDRAWN("USER002", "탈퇴한 사용자입니다", HttpStatus.FORBIDDEN),
     USER_SUSPENDED("USER003", "정지된 사용자입니다", HttpStatus.FORBIDDEN),
-
+    NAME_DUPLICATE("USER004", "이미 존재하는 이름입니다", HttpStatus.CONFLICT),
     // 구단 관련 에러
     TEAM_NOT_FOUND("TEAM001", "해당 구단은 존재하지 않습니다.", HttpStatus.NOT_FOUND),
 

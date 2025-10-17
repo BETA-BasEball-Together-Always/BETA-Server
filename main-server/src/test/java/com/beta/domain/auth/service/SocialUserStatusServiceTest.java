@@ -1,5 +1,6 @@
 package com.beta.domain.auth.service;
 
+import com.beta.common.exception.auth.NameDuplicateException;
 import com.beta.common.exception.auth.PersonalInfoAgreementRequiredException;
 import com.beta.common.exception.auth.UserSuspendedException;
 import com.beta.common.exception.auth.UserWithdrawnException;
@@ -146,5 +147,17 @@ class SocialUserStatusServiceTest {
         assertThatThrownBy(() -> socialUserStatusService.validateAgreePersonalInfo(agreePersonalInfo))
                 .isInstanceOf(PersonalInfoAgreementRequiredException.class)
                 .hasMessageContaining("개인정보 수집 및 이용에 동의하셔야 회원가입이 가능합니다");
+    }
+
+    @Test
+    @DisplayName("이름 중복이 true면 NameDuplicateException을 발생시킨다")
+    void validateNameDuplicate_true_throwsException() {
+        // given
+        boolean nameDuplicate = true;
+
+        // when & then
+        assertThatThrownBy(() -> socialUserStatusService.validateNameDuplicate(nameDuplicate))
+                .isInstanceOf(NameDuplicateException.class)
+                .hasMessageContaining("이미 존재하는 이름입니다.");
     }
 }
