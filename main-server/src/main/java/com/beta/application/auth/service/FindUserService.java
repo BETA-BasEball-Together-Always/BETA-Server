@@ -1,6 +1,7 @@
 package com.beta.application.auth.service;
 
 import com.beta.application.auth.mapper.UserMapper;
+import com.beta.common.exception.auth.UserNotFoundException;
 import com.beta.common.provider.SocialProvider;
 import com.beta.domain.auth.User;
 import com.beta.infra.auth.repository.UserJpaRepository;
@@ -22,5 +23,11 @@ public class FindUserService {
     @Transactional(readOnly = true)
     public boolean isNameDuplicate(String name) {
         return userJpaRepository.existsByName(name);
+    }
+    
+    @Transactional(readOnly = true)
+    public User findUserById(Long userId) {
+        return UserMapper.toDomain(userJpaRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId)));
     }
 }
