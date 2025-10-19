@@ -114,6 +114,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 인증이 필요하지 않은 경로들
         return path.startsWith("/api/auth/login/kakao") ||
                path.startsWith("/api/auth/login/naver") ||
+                path.startsWith("/api/auth/name/check") ||
                path.startsWith("/api/auth/signup/complete") ||  // 회원가입 완료도 제외
                path.startsWith("/api/auth/refresh");              // 리프레시도 제외
     }
