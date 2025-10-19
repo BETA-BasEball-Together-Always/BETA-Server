@@ -50,8 +50,12 @@ jobs:
       # -----------------------------
       - name: Build and Push Docker image
         run: |
-          docker build -t yeongo05/beta-app:latest ./main-server
-          docker push yeongo05/beta-app:latest
+          docker buildx create --use
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -t yeongo05/beta-app:latest \
+            -f ./main-server/Dockerfile . \
+            --push
 
       # 7️⃣ GCP VM SSH 배포
       - name: Deploy to GCP VM
