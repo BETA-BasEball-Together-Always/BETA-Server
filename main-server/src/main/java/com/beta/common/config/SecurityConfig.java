@@ -36,7 +36,8 @@ public class SecurityConfig {
                 .requestMatchers(
                         "/api/auth/login/**",     // 소셜 로그인
                         "/api/auth/refresh",   // 토큰 재발급
-                        "/api/auth/signup/complete"
+                        "/api/auth/signup/complete",
+                        "/api/auth/name/**"
                 ).permitAll()
                 // 그 외 모든 요청은 인증 필요
                 .anyRequest().authenticated()

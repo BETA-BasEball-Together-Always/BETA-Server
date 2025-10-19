@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "baseball_teams")
 @Getter
@@ -32,10 +34,10 @@ public class BaseballTeamEntity {
     private String stadiumAddress;
 
     @Column(name = "latitude", precision = 10, scale = 7)
-    private Double latitude; // 위도
+    private BigDecimal latitude; // 위도
 
     @Column(name = "longitude", precision = 10, scale = 7)
-    private Double longitude; // 경도
+    private BigDecimal longitude; // 경도
 
     @Column(name = "founded_year")
     private Integer foundedYear; // 창단 연도
@@ -43,7 +45,7 @@ public class BaseballTeamEntity {
     @Builder
     public BaseballTeamEntity(String code, String teamNameEn, String teamNameKr,
                               String homeStadium, String stadiumAddress,
-                              Double latitude, Double longitude, Integer foundedYear) {
+                              BigDecimal latitude, BigDecimal longitude, Integer foundedYear) {
         this.code = code;
         this.teamNameEn = teamNameEn;
         this.teamNameKr = teamNameKr;

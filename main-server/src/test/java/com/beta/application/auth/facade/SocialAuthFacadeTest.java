@@ -8,17 +8,21 @@ import com.beta.application.auth.service.RefreshTokenService;
 import com.beta.application.auth.service.SaveUserService;
 import com.beta.application.auth.service.SocialUserInfoService;
 import com.beta.application.common.service.FindTeamService;
+import com.beta.common.exception.auth.InvalidTokenException;
 import com.beta.common.exception.auth.PersonalInfoAgreementRequiredException;
 import com.beta.common.exception.auth.UserSuspendedException;
 import com.beta.common.exception.auth.UserWithdrawnException;
 import com.beta.common.provider.SocialProvider;
 import com.beta.common.security.JwtTokenProvider;
 import com.beta.domain.auth.User;
+import com.beta.domain.auth.service.RefreshTokenValidationService;
 import com.beta.domain.auth.service.SocialUserStatusService;
 import com.beta.infra.auth.client.SocialUserInfo;
+import com.beta.infra.auth.entity.RefreshTokenEntity;
 import com.beta.infra.auth.entity.UserEntity;
 import com.beta.infra.common.entity.BaseballTeamEntity;
 import com.beta.presentation.auth.request.SignupCompleteRequest;
+import com.beta.presentation.auth.response.TokenResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +30,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -58,6 +63,9 @@ class SocialAuthFacadeTest {
 
     @Mock
     private SaveUserService saveUserService;
+    
+    @Mock
+    private RefreshTokenValidationService refreshTokenValidationService;
 
     @InjectMocks
     private SocialAuthFacade socialAuthFacade;
@@ -289,6 +297,49 @@ class SocialAuthFacadeTest {
 
         verify(socialUserStatusService, times(1)).validateAgreePersonalInfo(false);
         verify(saveUserService, never()).saveUser(any(), any());
+    }
+
+    @Test
+    @DisplayName("로그아웃 시 리프레시 토큰을 삭제한다")
+    void logout_success_deletesRefreshToken() {
+        // given
+        Long userId = 1L;
+        
+        // when
+        socialAuthFacade.logout(userId);
+        
+        // then
+        verify(refreshTokenService).deleteByUserId(userId);
+    }
+    
+    @Test
+    @DisplayName("닉네임 중복 확인 - 중복된 경우 true를 반환한다")
+    void isNameDuplicate_duplicateName_returnsTrue() {
+        // given
+        String name = "김철수";
+        when(findUserService.isNameDuplicate(name)).thenReturn(true);
+        
+        // when
+        boolean result = socialAuthFacade.isNameDuplicate(name);
+        
+        // then
+        assertThat(result).isTrue();
+        verify(findUserService).isNameDuplicate(name);
+    }
+    
+    @Test
+    @DisplayName("닉네임 중복 확인 - 중복되지 않은 경우 false를 반환한다")
+    void isNameDuplicate_uniqueName_returnsFalse() {
+        // given
+        String name = "홍길동";
+        when(findUserService.isNameDuplicate(name)).thenReturn(false);
+        
+        // when
+        boolean result = socialAuthFacade.isNameDuplicate(name);
+        
+        // then
+        assertThat(result).isFalse();
+        verify(findUserService).isNameDuplicate(name);
     }
 
     // Helper method

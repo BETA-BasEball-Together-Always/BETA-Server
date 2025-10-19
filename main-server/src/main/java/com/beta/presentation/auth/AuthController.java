@@ -7,6 +7,7 @@ import com.beta.common.security.CustomUserDetails;
 import com.beta.presentation.auth.request.RefreshTokenRequest;
 import com.beta.presentation.auth.request.SignupCompleteRequest;
 import com.beta.presentation.auth.request.SocialLoginRequest;
+import com.beta.presentation.auth.response.LogoutResponse;
 import com.beta.presentation.auth.response.NameDuplicateResponse;
 import com.beta.presentation.auth.response.SocialLoginResponse;
 import com.beta.presentation.auth.response.TokenResponse;
@@ -52,14 +53,17 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        // TODO: 토큰 재발급 로직 구현
-        return ResponseEntity.ok(new TokenResponse("", ""));
+        TokenResponse response = socialAuthFacade.refreshTokens(request.getRefreshToken());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        // TODO: 로그아웃 로직 구현
-        return ResponseEntity.ok("");
+    public ResponseEntity<LogoutResponse> logout(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.ok(LogoutResponse.failed("인증 정보가 없습니다."));
+        }
+        socialAuthFacade.logout(userDetails.userId());
+        return ResponseEntity.ok(LogoutResponse.success());
     }
 
     private SocialLoginResponse toResponse(LoginResult result) {

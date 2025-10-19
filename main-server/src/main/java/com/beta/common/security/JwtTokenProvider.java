@@ -26,7 +26,7 @@ public class JwtTokenProvider {
 
     public String generateSignupPendingToken(String socialId, String provider, String gender, String ageRange) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + 6000000);
+        Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
 
         return Jwts.builder()
                 .subject(socialId)
