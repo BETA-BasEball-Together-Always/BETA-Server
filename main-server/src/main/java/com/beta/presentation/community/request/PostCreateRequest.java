@@ -1,5 +1,6 @@
 package com.beta.presentation.community.request;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,8 @@ public class PostCreateRequest {
 
     @NotBlank(message = "채널은 필수입니다")
     private String channel;
+
+    private List<Long> imageIds;
 
     @Size(max = 10, message = "해시태그는 최대 10개까지 가능합니다")
     private List<String> hashtags;

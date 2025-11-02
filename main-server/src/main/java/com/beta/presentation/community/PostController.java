@@ -2,6 +2,7 @@ package com.beta.presentation.community;
 
 import com.beta.application.community.PostApplicationService;
 import com.beta.presentation.community.request.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +38,7 @@ public class PostController {
     public ResponseEntity<Void> deleteImages(
             @PathVariable Long postId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @RequestBody ImageDeleteRequest request
+            @Valid @RequestBody ImageDeleteRequest request
     ) {
         return ResponseEntity.noContent().build();
     }
@@ -46,7 +47,7 @@ public class PostController {
     public ResponseEntity<Void> updateImageOrder(
             @PathVariable Long postId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @RequestBody ImageOrderUpdateRequest request
+            @Valid @RequestBody ImageOrderUpdateRequest request
     ) {
         return ResponseEntity.noContent().build();
     }
@@ -54,7 +55,7 @@ public class PostController {
     @PostMapping
     public ResponseEntity<?> createPost(
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @RequestBody PostCreateRequest request
+            @Valid @RequestBody PostCreateRequest request
     ) {
         return ResponseEntity.ok().build();
     }
@@ -63,7 +64,7 @@ public class PostController {
     public ResponseEntity<?> updateContent(
             @PathVariable Long postId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @RequestBody PostContentUpdateRequest request
+            @Valid @RequestBody PostContentUpdateRequest request
     ) {
         return ResponseEntity.ok().build();
     }
@@ -80,7 +81,7 @@ public class PostController {
     public ResponseEntity<?> addOrUpdateEmotion(
             @PathVariable Long postId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @RequestBody EmotionRequest request
+            @Valid @RequestBody EmotionRequest request
     ) {
         return ResponseEntity.ok().build();
     }
