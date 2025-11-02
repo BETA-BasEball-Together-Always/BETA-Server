@@ -1,6 +1,7 @@
 package com.beta.infra.community.entity;
 
 public enum Status {
+    PENDING,     // 검토 중
     ACTIVE,      // 정상 공개
     DELETED,     // 삭제됨
     HIDDEN,      // 관리자에 의해 숨김
