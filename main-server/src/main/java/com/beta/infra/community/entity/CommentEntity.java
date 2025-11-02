@@ -1,0 +1,38 @@
+package com.beta.infra.community.entity;
+
+import com.beta.infra.common.entity.BaseEntity;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Entity
+@Table(name = "comment")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class CommentEntity extends BaseEntity {
+
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @Column(name = "parent_id")
+    private Long parentId;
+
+    @Column(name = "post_id", nullable = false)
+    private Long postId;
+
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
+    private String content;
+
+    @Column(name = "depth", nullable = false)
+    private Integer depth = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Status status = Status.ACTIVE;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+}
