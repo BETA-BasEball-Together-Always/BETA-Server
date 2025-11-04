@@ -1,10 +1,14 @@
 package com.beta.presentation.community;
 
 import com.beta.application.community.PostApplicationService;
+import com.beta.application.community.dto.ImageDto;
+import com.beta.common.security.CustomUserDetails;
 import com.beta.presentation.community.request.*;
+import com.beta.presentation.community.response.PostImagesResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,11 +22,12 @@ public class PostController {
     private final PostApplicationService postApplicationService;
 
     @PostMapping(value = "/images", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> uploadImages(
+    public ResponseEntity<PostImagesResponse> uploadImages(
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @RequestParam("images") List<MultipartFile> images
+            @RequestParam("images") List<MultipartFile> images,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(postApplicationService.uploadImages(idempotencyKey, images, userDetails.userId()));
     }
 
     @PostMapping(value = "/{postId}/images", consumes = {"multipart/form-data"})
