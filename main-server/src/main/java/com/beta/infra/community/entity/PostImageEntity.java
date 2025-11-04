@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostImageEntity extends BaseEntity {
 
-    @Column(name = "post_id", nullable = false)
+    @Column(name = "post_id")
     private Long postId;
 
     @Column(name = "img_url", nullable = false)
@@ -32,4 +32,7 @@ public class PostImageEntity extends BaseEntity {
 
     @Column(name = "mime_type", nullable = false, length = 50)
     private String mimeType;
+
+    @Column(name = "status", nullable = false, length = 20)
+    private Status status = Status.PENDING;
 }

@@ -38,12 +38,21 @@ dependencies {
     // Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     
+    // DotEnv for .env file support
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+    
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     
     // Database
     runtimeOnly 'com.mysql:mysql-connector-j'
+    
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    
+    // Google Cloud Storage
+    implementation 'com.google.cloud:spring-cloud-gcp-starter-storage:5.8.0'
     
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
