@@ -1,6 +1,8 @@
 package com.beta.common.exception;
 
 import com.beta.common.exception.auth.*;
+import com.beta.common.exception.idempotency.IdempotencyKeyException;
+import com.beta.common.exception.image.*;
 import com.beta.common.exception.team.TeamNotFoundException;
 import com.beta.presentation.common.response.ErrorResponse;
 import lombok.RequiredArgsConstructor;
@@ -119,6 +121,72 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.TEAM_NOT_FOUND);
         return ResponseEntity.status(ErrorCode.TEAM_NOT_FOUND.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 이미 처리된 요청
+     */
+    @ExceptionHandler(IdempotencyKeyException.class)
+    public ResponseEntity<ErrorResponse> handleIdempotencyKeyException(IdempotencyKeyException e) {
+        log.warn("Idempotency key exception: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.IDEMPOTENCY_KEY_DUPLICATE);
+        return ResponseEntity.status(ErrorCode.IDEMPOTENCY_KEY_DUPLICATE.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 이미지 필수
+     */
+    @ExceptionHandler(ImageRequiredException.class)
+    public ResponseEntity<ErrorResponse> handleImageRequiredException(ImageRequiredException e) {
+        log.warn("Image required: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.IMAGE_REQUIRED);
+        return ResponseEntity.status(ErrorCode.IMAGE_REQUIRED.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 이미지 형식 오류
+     */
+    @ExceptionHandler(InvalidImageTypeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidImageTypeException(InvalidImageTypeException e) {
+        log.warn("Invalid image type: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_IMAGE_TYPE);
+        return ResponseEntity.status(ErrorCode.INVALID_IMAGE_TYPE.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 이미지 크기 초과
+     */
+    @ExceptionHandler(ImageSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleImageSizeExceededException(ImageSizeExceededException e) {
+        log.warn("Image size exceeded: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.IMAGE_SIZE_EXCEEDED);
+        return ResponseEntity.status(ErrorCode.IMAGE_SIZE_EXCEEDED.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 이미지 개수 초과
+     */
+    @ExceptionHandler(ImageCountExceededException.class)
+    public ResponseEntity<ErrorResponse> handleImageCountExceededException(ImageCountExceededException e) {
+        log.warn("Image count exceeded: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.IMAGE_COUNT_EXCEEDED);
+        return ResponseEntity.status(ErrorCode.IMAGE_COUNT_EXCEEDED.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 이미지 업로드 실패
+     */
+    @ExceptionHandler(ImageUploadFailedException.class)
+    public ResponseEntity<ErrorResponse> handleImageUploadFailedException(ImageUploadFailedException e) {
+        log.error("Image upload failed: {}", e.getMessage(), e);
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.IMAGE_UPLOAD_FAILED);
+        return ResponseEntity.status(ErrorCode.IMAGE_UPLOAD_FAILED.getStatus()).body(errorResponse);
     }
 
     /**
