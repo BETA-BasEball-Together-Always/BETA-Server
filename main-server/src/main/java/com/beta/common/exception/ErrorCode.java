@@ -16,6 +16,9 @@ public enum ErrorCode {
     EXPIRED_REFRESH_TOKEN("JWT005", "리프레시 토큰이 만료되었습니다", HttpStatus.UNAUTHORIZED),
     INVALID_REFRESH_TOKEN("JWT006", "유효하지 않은 리프레시 토큰입니다", HttpStatus.UNAUTHORIZED),
     INVALID_SIGNUP_TOKEN("JWT007", "유효하지 않은 가입 토큰입니다", HttpStatus.UNAUTHORIZED),
+
+    // 멱등성 관련 에러
+    IDEMPOTENCY_KEY_DUPLICATE("IDEMPOTENCY001", "이미 처리된 요청입니다", HttpStatus.CONFLICT),
     
     // 소셜 로그인 관련 에러
     INVALID_SOCIAL_TOKEN("SOCIAL001", "유효하지 않은 소셜 로그인 토큰입니다", HttpStatus.UNAUTHORIZED),
@@ -34,6 +37,13 @@ public enum ErrorCode {
     NAME_DUPLICATE("USER004", "이미 존재하는 이름입니다", HttpStatus.CONFLICT),
     // 구단 관련 에러
     TEAM_NOT_FOUND("TEAM001", "해당 구단은 존재하지 않습니다.", HttpStatus.NOT_FOUND),
+
+    // 이미지 관련 에러
+    INVALID_IMAGE_TYPE("IMAGE001", "지원하지 않는 파일 형식입니다 (jpg, jpeg, png만 가능)", HttpStatus.BAD_REQUEST),
+    IMAGE_SIZE_EXCEEDED("IMAGE002", "이미지 파일 크기는 10MB를 초과할 수 없습니다", HttpStatus.BAD_REQUEST),
+    IMAGE_COUNT_EXCEEDED("IMAGE003", "이미지 파일은는 최대 5개까지 업로드 가능합니다", HttpStatus.BAD_REQUEST),
+    IMAGE_UPLOAD_FAILED("IMAGE004", "이미지 파일 업로드 중 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR),
+    IMAGE_REQUIRED("IMAGE005", "이미지 파일이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
 
     // 서버 에러
     INTERNAL_SERVER_ERROR("SERVER001", "서버 내부 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR);
