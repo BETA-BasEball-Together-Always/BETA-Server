@@ -4,6 +4,7 @@ import com.beta.application.community.PostApplicationService;
 import com.beta.application.community.dto.ImageDto;
 import com.beta.common.security.CustomUserDetails;
 import com.beta.presentation.community.request.*;
+import com.beta.presentation.community.response.ImageDeleteResponse;
 import com.beta.presentation.community.response.PostImagesResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,30 +32,33 @@ public class PostController {
     }
 
     @PostMapping(value = "/{postId}/images", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> addImages(
+    public ResponseEntity<PostImagesResponse> addImages(
             @PathVariable Long postId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @RequestParam("images") List<MultipartFile> images
+            @RequestParam("images") List<MultipartFile> images,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(postApplicationService.insertImagesToPost(idempotencyKey, postId, images, userDetails.userId()));
     }
 
     @DeleteMapping("/{postId}/images")
-    public ResponseEntity<Void> deleteImages(
+    public ResponseEntity<ImageDeleteResponse> deleteImages(
             @PathVariable Long postId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @Valid @RequestBody ImageDeleteRequest request
+            @Valid @RequestBody ImageDeleteRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(postApplicationService.softDeleteImages(postId, idempotencyKey, request, userDetails.userId()));
     }
 
     @PatchMapping("/{postId}/images/order")
-    public ResponseEntity<Void> updateImageOrder(
+    public ResponseEntity<PostImagesResponse> updateImageOrder(
             @PathVariable Long postId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @Valid @RequestBody ImageOrderUpdateRequest request
+            @Valid @RequestBody ImageOrderUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(postApplicationService.updateImageOrder(postId, idempotencyKey, request, userDetails.userId()));
     }
 
     @PostMapping

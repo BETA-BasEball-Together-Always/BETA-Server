@@ -38,13 +38,18 @@ public enum ErrorCode {
     // 구단 관련 에러
     TEAM_NOT_FOUND("TEAM001", "해당 구단은 존재하지 않습니다.", HttpStatus.NOT_FOUND),
 
+    // 게시글 관련 에러
+    POST_NOT_FOUND("POST001", "게시글을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+    POST_ACCESS_DENIED("POST002", "게시글에 대한 권한이 없습니다", HttpStatus.FORBIDDEN),
+
     // 이미지 관련 에러
     INVALID_IMAGE_TYPE("IMAGE001", "지원하지 않는 파일 형식입니다 (jpg, jpeg, png만 가능)", HttpStatus.BAD_REQUEST),
     IMAGE_SIZE_EXCEEDED("IMAGE002", "이미지 파일 크기는 10MB를 초과할 수 없습니다", HttpStatus.BAD_REQUEST),
-    IMAGE_COUNT_EXCEEDED("IMAGE003", "이미지 파일은는 최대 5개까지 업로드 가능합니다", HttpStatus.BAD_REQUEST),
+    IMAGE_COUNT_EXCEEDED("IMAGE003", "이미지 파일은 최대 5개까지 업로드 가능합니다", HttpStatus.BAD_REQUEST),
     IMAGE_UPLOAD_FAILED("IMAGE004", "이미지 파일 업로드 중 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR),
     IMAGE_REQUIRED("IMAGE005", "이미지 파일이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
-
+    IMAGE_ORDER_MISMATCH("IMAGE006", "정렬할 이미지 개수와 DB 이미지 개수가 일치하지 않습니다", HttpStatus.BAD_REQUEST),
+    IMAGE_NOT_FOUND("IMAGE007", "삭제할 이미지를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     // 서버 에러
     INTERNAL_SERVER_ERROR("SERVER001", "서버 내부 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR);
 

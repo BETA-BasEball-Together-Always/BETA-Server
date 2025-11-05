@@ -25,8 +25,8 @@ public class PostImageEntity extends BaseEntity {
     @Column(name = "new_name", length = 100)
     private String newName;
 
-    @Column(name = "order", nullable = false)
-    private Integer order = 0;
+    @Column(name = "sort", nullable = false)
+    private Integer sort = 0;
 
     @Column(name = "file_size", nullable = false)
     private Long fileSize;
@@ -39,14 +39,29 @@ public class PostImageEntity extends BaseEntity {
 
     @Builder
     public PostImageEntity(Long postId, String imgUrl, String originName, String newName,
-                           Integer order, Long fileSize, String mimeType, Status status) {
+                           Integer sort, Long fileSize, String mimeType, Status status) {
         this.postId = postId;
         this.imgUrl = imgUrl;
         this.originName = originName;
         this.newName = newName;
-        this.order = order;
+        this.sort = sort;
         this.fileSize = fileSize;
         this.mimeType = mimeType;
-        this.status = status;
+        if (status != null) {
+            this.status = status;
+        }
+    }
+
+    public void softDelete() {
+        this.status = Status.MARKED_FOR_DELETION;
+    }
+
+    public void sortUpdate(int sort) {
+        this.sort = sort;
+    }
+
+    /* test 용 */
+    public void testIdSet(Long id) {
+        super.testIdSet(id);
     }
 }

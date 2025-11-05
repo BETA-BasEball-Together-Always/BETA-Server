@@ -3,6 +3,7 @@ package com.beta.infra.community.entity;
 import com.beta.infra.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -36,6 +37,13 @@ public class PostEntity extends BaseEntity {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @Builder
+    public PostEntity(Long userId, String content, Channel channel) {
+        this.userId = userId;
+        this.content = content;
+        this.channel = channel;
+    }
 
     public enum Channel {
         DOOSAN,
