@@ -9,14 +9,11 @@ import java.util.List;
 @Getter
 @Builder
 public class PostImagesResponse {
-    private List<Long> uploadedImageIds;
+    private List<ImageDto> uploadedImages;
 
-    public static PostImagesResponse of(List<ImageDto> imageDtoList) {
-        List<Long> imageIds = imageDtoList.stream()
-                .map(ImageDto::getPostImageId)
-                .toList();
+    public static PostImagesResponse from(List<ImageDto> imageDtoList) {
         return PostImagesResponse.builder()
-                .uploadedImageIds(imageIds)
+                .uploadedImages(imageDtoList)
                 .build();
     }
 }
