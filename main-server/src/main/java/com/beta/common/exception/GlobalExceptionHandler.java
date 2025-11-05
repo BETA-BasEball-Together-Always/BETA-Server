@@ -3,6 +3,8 @@ package com.beta.common.exception;
 import com.beta.common.exception.auth.*;
 import com.beta.common.exception.idempotency.IdempotencyKeyException;
 import com.beta.common.exception.image.*;
+import com.beta.common.exception.post.PostAccessDeniedException;
+import com.beta.common.exception.post.PostNotFoundException;
 import com.beta.common.exception.team.TeamNotFoundException;
 import com.beta.presentation.common.response.ErrorResponse;
 import lombok.RequiredArgsConstructor;
@@ -124,6 +126,28 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 게시글을 찾을 수 없음
+     */
+    @ExceptionHandler(PostNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePostNotFoundException(PostNotFoundException e) {
+        log.warn("Post not found: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.POST_NOT_FOUND);
+        return ResponseEntity.status(ErrorCode.POST_NOT_FOUND.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 게시글 접근 권한 없음
+     */
+    @ExceptionHandler(PostAccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handlePostAccessDeniedException(PostAccessDeniedException e) {
+        log.warn("Post access denied: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.POST_ACCESS_DENIED);
+        return ResponseEntity.status(ErrorCode.POST_ACCESS_DENIED.getStatus()).body(errorResponse);
+    }
+
+    /**
      * 이미 처리된 요청
      */
     @ExceptionHandler(IdempotencyKeyException.class)
@@ -187,6 +211,28 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.IMAGE_UPLOAD_FAILED);
         return ResponseEntity.status(ErrorCode.IMAGE_UPLOAD_FAILED.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 이미지 순서 불일치
+     */
+    @ExceptionHandler(ImageOrderMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleImageOrderMismatchException(ImageOrderMismatchException e) {
+        log.warn("Image order mismatch: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.IMAGE_ORDER_MISMATCH);
+        return ResponseEntity.status(ErrorCode.IMAGE_ORDER_MISMATCH.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 이미지를 찾을 수 없음
+     */
+    @ExceptionHandler(ImageNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleImageNotFoundException(ImageNotFoundException e) {
+        log.warn("Image not found: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.IMAGE_NOT_FOUND);
+        return ResponseEntity.status(ErrorCode.IMAGE_NOT_FOUND.getStatus()).body(errorResponse);
     }
 
     /**
