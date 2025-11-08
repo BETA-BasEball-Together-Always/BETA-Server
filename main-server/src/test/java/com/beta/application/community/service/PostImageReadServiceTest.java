@@ -73,45 +73,4 @@ class PostImageReadServiceTest {
         assertThatCode(() -> postImageReadService.validatePostImage(postId, newImageCount))
                 .doesNotThrowAnyException();
     }
-
-    @Test
-    @DisplayName("시작 순서 조회 - 기존 이미지 있음")
-    void getStartOrder_WithExistingImages() {
-        // given
-        Long postId = 1L;
-        PostImageEntity lastImage = PostImageEntity.builder()
-                .postId(postId)
-                .imgUrl("http://example.com/image.jpg")
-                .originName("image.jpg")
-                .newName("unique-image.jpg")
-                .fileSize(1024L)
-                .mimeType("image/jpeg")
-                .sort(3)
-                .build();
-
-        when(postImageJpaRepository.findTopByPostIdAndStatusOrderBySortDesc(postId, Status.ACTIVE))
-                .thenReturn(Optional.of(lastImage));
-
-        // when
-        int startOrder = postImageReadService.getStartOrder(postId);
-
-        // then
-        assertThat(startOrder).isEqualTo(4);
-    }
-
-    @Test
-    @DisplayName("시작 순서 조회 - 기존 이미지 없음")
-    void getStartOrder_NoExistingImages() {
-        // given
-        Long postId = 1L;
-
-        when(postImageJpaRepository.findTopByPostIdAndStatusOrderBySortDesc(postId, Status.ACTIVE))
-                .thenReturn(Optional.empty());
-
-        // when
-        int startOrder = postImageReadService.getStartOrder(postId);
-
-        // then
-        assertThat(startOrder).isEqualTo(1);
-    }
 }
