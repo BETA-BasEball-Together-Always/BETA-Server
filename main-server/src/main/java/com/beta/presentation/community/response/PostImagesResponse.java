@@ -4,16 +4,16 @@ import com.beta.application.community.dto.ImageDto;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.util.List;
-
 @Getter
 @Builder
 public class PostImagesResponse {
-    private List<ImageDto> uploadedImages;
+    private Long imageId;
+    private String imageUrl;
 
-    public static PostImagesResponse from(List<ImageDto> imageDtoList) {
+    public static PostImagesResponse from(ImageDto dto) {
         return PostImagesResponse.builder()
-                .uploadedImages(imageDtoList)
+                .imageId(dto.getPostImageId())
+                .imageUrl(dto.getImgUrl())
                 .build();
     }
 }
