@@ -21,9 +21,4 @@ public class PostImageReadService {
             throw new ImageCountExceededException();
         }
     }
-
-    public int getStartOrder(Long postId) {
-        PostImageEntity postImage = postImageJpaRepository.findTopByPostIdAndStatusOrderBySortDesc(postId, Status.ACTIVE).orElse(null);
-        return postImage != null ? postImage.getSort() + 1 : 1;
-    }
 }

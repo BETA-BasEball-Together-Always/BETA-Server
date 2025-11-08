@@ -1,7 +1,6 @@
 package com.beta.application.community.service;
 
 import com.beta.application.community.dto.ImageDto;
-import com.beta.common.exception.image.ImageOrderMismatchException;
 import com.beta.common.exception.image.ImageUploadFailedException;
 import com.beta.domain.community.service.ImageValidationService;
 import com.beta.infra.community.entity.PostImageEntity;
@@ -17,11 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -34,13 +29,13 @@ public class PostImageWriteService {
     private final ImageErrorJpaRepository imageErrorJpaRepository;
 
     @Transactional
-    public List<ImageDto> uploadImages(List<MultipartFile> images, Long userId, int sortStart) {
+    public List<ImageDto> uploadImages(List<MultipartFile> images, Long userId) {
         List<ImageDto> imageDtoList = new ArrayList<>();
         try {
             imageValidationService.validateImages(images);
 
             for (MultipartFile image : images) {
-                ImageDto imageDto = gcsStorageClient.upload(image, sortStart++, userId);
+                ImageDto imageDto = gcsStorageClient.upload(image, userId);
                 imageDtoList.add(imageDto);
             }
 
@@ -100,26 +95,6 @@ public class PostImageWriteService {
                 .toList();
     }
 
-    @Transactional
-    public List<ImageDto> updateImageOrder(Long postId, List<Long> imageOrders) {
-        List<PostImageEntity> images = postImageJpaRepository.findAllByIdInAndPostIdAndStatusIn(
-                imageOrders, postId, List.of(Status.PENDING, Status.ACTIVE)
-        );
-
-        if (images.size() != imageOrders.size()) {
-            throw new ImageOrderMismatchException();
-        }
-
-        Map<Long, Integer> orderMap = IntStream.range(0, imageOrders.size())
-                .boxed()
-                .collect(Collectors.toMap(imageOrders::get, i -> i + 1));
-
-        images.forEach(image -> image.sortUpdate(orderMap.get(image.getId())));
-
-        return postImageJpaRepository.saveAll(images).stream()
-                .map(ImageDto::toDto)
-                .toList();
-    }
 
     private void saveImageError(String imageUrl, String fileName, Long userId) {
         imageErrorJpaRepository.save(

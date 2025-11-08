@@ -44,7 +44,7 @@ public class PostImageEntity extends BaseEntity {
         this.imgUrl = imgUrl;
         this.originName = originName;
         this.newName = newName;
-        this.sort = sort;
+        this.sort = sort != null ? sort : 0;
         this.fileSize = fileSize;
         this.mimeType = mimeType;
         if (status != null) {

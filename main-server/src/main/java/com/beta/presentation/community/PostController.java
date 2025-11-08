@@ -1,7 +1,6 @@
 package com.beta.presentation.community;
 
 import com.beta.application.community.PostApplicationService;
-import com.beta.application.community.dto.ImageDto;
 import com.beta.common.security.CustomUserDetails;
 import com.beta.presentation.community.request.*;
 import com.beta.presentation.community.response.ImageDeleteResponse;
@@ -23,7 +22,7 @@ public class PostController {
     private final PostApplicationService postApplicationService;
 
     @PostMapping(value = "/images", consumes = {"multipart/form-data"})
-    public ResponseEntity<PostImagesResponse> uploadImages(
+    public ResponseEntity<List<PostImagesResponse>> uploadImages(
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestParam("images") List<MultipartFile> images,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -32,7 +31,7 @@ public class PostController {
     }
 
     @PostMapping(value = "/{postId}/images", consumes = {"multipart/form-data"})
-    public ResponseEntity<PostImagesResponse> addImages(
+    public ResponseEntity<List<PostImagesResponse>> addImages(
             @PathVariable Long postId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestParam("images") List<MultipartFile> images,
@@ -49,16 +48,6 @@ public class PostController {
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         return ResponseEntity.ok(postApplicationService.softDeleteImages(postId, idempotencyKey, request, userDetails.userId()));
-    }
-
-    @PatchMapping("/{postId}/images/order")
-    public ResponseEntity<PostImagesResponse> updateImageOrder(
-            @PathVariable Long postId,
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @Valid @RequestBody ImageOrderUpdateRequest request,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        return ResponseEntity.ok(postApplicationService.updateImageOrder(postId, idempotencyKey, request, userDetails.userId()));
     }
 
     @PostMapping

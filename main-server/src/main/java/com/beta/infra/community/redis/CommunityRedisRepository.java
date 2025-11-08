@@ -21,7 +21,6 @@ public class CommunityRedisRepository {
         POST("post"),
         IMAGE_ADD("image-add"),
         IMAGE_DELETE("image-delete"),
-        IMAGE_ORDER("image-order"),
         POST_UPDATE("post-update"),
         POST_DELETE("post-delete"),
         EMOTION("emotion"),

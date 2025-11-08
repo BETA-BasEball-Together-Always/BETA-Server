@@ -4,7 +4,6 @@ import com.beta.application.community.dto.ImageDto;
 import com.beta.common.docker.TestContainer;
 import com.beta.common.exception.idempotency.IdempotencyKeyException;
 import com.beta.common.exception.image.ImageNotFoundException;
-import com.beta.common.exception.image.ImageOrderMismatchException;
 import com.beta.common.exception.post.PostAccessDeniedException;
 import com.beta.common.exception.post.PostNotFoundException;
 import com.beta.infra.community.entity.PostEntity;
@@ -15,7 +14,6 @@ import com.beta.infra.community.redis.CommunityRedisRepository;
 import com.beta.infra.community.repository.PostImageJpaRepository;
 import com.beta.infra.community.repository.PostJpaRepository;
 import com.beta.presentation.community.request.ImageDeleteRequest;
-import com.beta.presentation.community.request.ImageOrderUpdateRequest;
 import com.beta.presentation.community.response.ImageDeleteResponse;
 import com.beta.presentation.community.response.PostImagesResponse;
 import org.junit.jupiter.api.AfterEach;
@@ -107,18 +105,17 @@ class PostApplicationServiceTest extends TestContainer {
                 .build();
 
         // GCS 호출을 Mock으로 처리
-        when(gcsStorageClient.upload(any(MultipartFile.class), anyInt(), anyLong()))
+        when(gcsStorageClient.upload(any(MultipartFile.class), anyLong()))
                 .thenReturn(mockImageDto);
 
         // when
-        PostImagesResponse response = postApplicationService.uploadImages(testIdempotencyKey, files, testUserId);
+        List<PostImagesResponse> response = postApplicationService.uploadImages(testIdempotencyKey, files, testUserId);
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.getUploadedImages()).hasSize(1);
-        assertThat(response.getUploadedImages().get(0).getImgUrl())
+        assertThat(response).hasSize(1);
+        assertThat(response.getFirst().getImageUrl())
                 .isEqualTo("https://storage.googleapis.com/test/image.jpg");
-        assertThat(response.getUploadedImages().get(0).getSort()).isEqualTo(1);
     }
 
     @Test
@@ -139,7 +136,7 @@ class PostApplicationServiceTest extends TestContainer {
                 .fileSize(1024L)
                 .build();
 
-        when(gcsStorageClient.upload(any(MultipartFile.class), anyInt(), anyLong()))
+        when(gcsStorageClient.upload(any(MultipartFile.class), anyLong()))
                 .thenReturn(mockImageDto);
 
         // 첫 번째 요청 성공
@@ -170,18 +167,19 @@ class PostApplicationServiceTest extends TestContainer {
                 .fileSize(1024L)
                 .build();
 
-        when(gcsStorageClient.upload(any(MultipartFile.class), anyInt(), anyLong()))
+        when(gcsStorageClient.upload(any(MultipartFile.class), anyLong()))
                 .thenReturn(mockImageDto);
 
         // when
-        PostImagesResponse response = postApplicationService.insertImagesToPost(
+        List<PostImagesResponse> response = postApplicationService.insertImagesToPost(
                 testIdempotencyKey, testPost.getId(), files, testUserId
         );
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.getUploadedImages()).hasSize(1);
-        assertThat(response.getUploadedImages().get(0).getPostId()).isEqualTo(testPost.getId());
+        assertThat(response).hasSize(1);
+        assertThat(response.getFirst().getImageUrl())
+                .isEqualTo("https://storage.googleapis.com/test/image.jpg");
     }
 
     @Test
@@ -285,121 +283,5 @@ class PostApplicationServiceTest extends TestContainer {
                         testPost.getId(), testIdempotencyKey, request, testUserId
                 ))
                 .isInstanceOf(ImageNotFoundException.class);
-    }
-
-    @Test
-    @DisplayName("이미지 순서 변경 성공")
-    @Transactional
-    void updateImageOrder_Success() {
-        // given
-        PostImageEntity image1 = PostImageEntity.builder()
-                .postId(testPost.getId())
-                .imgUrl("https://storage.googleapis.com/test/image1.jpg")
-                .originName("image1.jpg")
-                .newName("unique-image1.jpg")
-                .fileSize(1024L)
-                .mimeType("image/jpeg")
-                .sort(1)
-                .status(Status.ACTIVE)
-                .build();
-
-        PostImageEntity image2 = PostImageEntity.builder()
-                .postId(testPost.getId())
-                .imgUrl("https://storage.googleapis.com/test/image2.jpg")
-                .originName("image2.jpg")
-                .newName("unique-image2.jpg")
-                .fileSize(2048L)
-                .mimeType("image/jpeg")
-                .sort(2)
-                .status(Status.ACTIVE)
-                .build();
-
-        PostImageEntity image3 = PostImageEntity.builder()
-                .postId(testPost.getId())
-                .imgUrl("https://storage.googleapis.com/test/image3.jpg")
-                .originName("image3.jpg")
-                .newName("unique-image3.jpg")
-                .fileSize(3072L)
-                .mimeType("image/jpeg")
-                .sort(3)
-                .status(Status.ACTIVE)
-                .build();
-
-        image1 = postImageJpaRepository.save(image1);
-        image2 = postImageJpaRepository.save(image2);
-        image3 = postImageJpaRepository.save(image3);
-
-        // 순서를 3, 1, 2로 변경
-        ImageOrderUpdateRequest request = ImageOrderUpdateRequest.builder()
-                .imageOrders(List.of(image3.getId(), image1.getId(), image2.getId()))
-                .build();
-
-        // when
-        PostImagesResponse response = postApplicationService.updateImageOrder(
-                testPost.getId(), testIdempotencyKey, request, testUserId
-        );
-
-        // then
-        assertThat(response).isNotNull();
-        assertThat(response.getUploadedImages()).hasSize(3);
-
-        // ID로 이미지를 찾아서 sort 값 확인 (순서: image3=1, image1=2, image2=3)
-        var imageMap = response.getUploadedImages().stream()
-                .collect(java.util.stream.Collectors.toMap(
-                        img -> img.getPostImageId(),
-                        img -> img
-                ));
-
-        assertThat(imageMap.get(image3.getId()).getSort()).isEqualTo(1);
-        assertThat(imageMap.get(image1.getId()).getSort()).isEqualTo(2);
-        assertThat(imageMap.get(image2.getId()).getSort()).isEqualTo(3);
-    }
-
-    @Test
-    @DisplayName("이미지 순서 변경 - 게시글 소유자가 아니면 실패")
-    void updateImageOrder_AccessDenied() {
-        // given
-        Long otherUserId = 999L;
-        ImageOrderUpdateRequest request = ImageOrderUpdateRequest.builder()
-                .imageOrders(List.of(1L, 2L, 3L))
-                .build();
-
-        // when & then
-        assertThatThrownBy(() ->
-                postApplicationService.updateImageOrder(
-                        testPost.getId(), testIdempotencyKey, request, otherUserId
-                ))
-                .isInstanceOf(PostAccessDeniedException.class);
-    }
-
-    @Test
-    @DisplayName("이미지 순서 변경 - 이미지 개수 불일치 시 실패")
-    @Transactional
-    void updateImageOrder_CountMismatch() {
-        // given
-        PostImageEntity image1 = PostImageEntity.builder()
-                .postId(testPost.getId())
-                .imgUrl("https://storage.googleapis.com/test/image1.jpg")
-                .originName("image1.jpg")
-                .newName("unique-image1.jpg")
-                .fileSize(1024L)
-                .mimeType("image/jpeg")
-                .sort(1)
-                .status(Status.ACTIVE)
-                .build();
-
-        image1 = postImageJpaRepository.save(image1);
-
-        // 존재하지 않는 이미지 ID 포함
-        ImageOrderUpdateRequest request = ImageOrderUpdateRequest.builder()
-                .imageOrders(List.of(image1.getId(), 999L, 1000L))
-                .build();
-
-        // when & then
-        assertThatThrownBy(() ->
-                postApplicationService.updateImageOrder(
-                        testPost.getId(), testIdempotencyKey, request, testUserId
-                ))
-                .isInstanceOf(ImageOrderMismatchException.class);
     }
 }

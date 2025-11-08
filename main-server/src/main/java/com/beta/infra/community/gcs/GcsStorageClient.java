@@ -24,7 +24,7 @@ public class GcsStorageClient {
     @Value("${spring.cloud.gcp.storage.bucket}")
     private String bucketName;
 
-    public ImageDto upload(MultipartFile file, int sort, Long userId) throws IOException {
+    public ImageDto upload(MultipartFile file, Long userId) throws IOException {
         String fileName = generateFileName(file.getOriginalFilename(), userId);
 
         BlobId blobId = BlobId.of(bucketName, fileName);
@@ -36,7 +36,6 @@ public class GcsStorageClient {
 
         return ImageDto.builder()
                 .imgUrl(String.format("https://storage.googleapis.com/%s/%s", bucketName, fileName))
-                .sort(sort)
                 .newName(fileName)
                 .originName(file.getOriginalFilename())
                 .fileSize(file.getSize())
