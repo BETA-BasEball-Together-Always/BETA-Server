@@ -16,6 +16,9 @@ public class PostImageEntity extends BaseEntity {
     @Column(name = "post_id")
     private Long postId;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     @Column(name = "img_url", nullable = false)
     private String imgUrl;
 
@@ -38,9 +41,10 @@ public class PostImageEntity extends BaseEntity {
     private Status status = Status.PENDING;
 
     @Builder
-    public PostImageEntity(Long postId, String imgUrl, String originName, String newName,
+    public PostImageEntity(Long postId, Long userId, String imgUrl, String originName, String newName,
                            Integer sort, Long fileSize, String mimeType, Status status) {
         this.postId = postId;
+        this.userId = userId;
         this.imgUrl = imgUrl;
         this.originName = originName;
         this.newName = newName;
@@ -52,14 +56,25 @@ public class PostImageEntity extends BaseEntity {
         }
     }
 
-    public void softDelete() {
+    public void markForDeletion() {
         this.status = Status.MARKED_FOR_DELETION;
     }
 
-    public void sortUpdate(int sort) {
-        this.sort = sort;
+    public void softDelete() {
+        this.status = Status.DELETED;
     }
 
+    public void imageActivateAndSort(Long postId, int sort) {
+        this.postId = postId;
+        this.sort = sort;
+        this.status = Status.ACTIVE;
+    }
+
+    public void imageRollback() {
+        this.postId = null;
+        this.sort = 0;
+        this.status = Status.PENDING;
+    }
     /* test 용 */
     public void testIdSet(Long id) {
         super.testIdSet(id);

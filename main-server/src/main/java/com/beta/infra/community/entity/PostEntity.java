@@ -39,10 +39,10 @@ public class PostEntity extends BaseEntity {
     private LocalDateTime deletedAt;
 
     @Builder
-    public PostEntity(Long userId, String content, Channel channel) {
+    public PostEntity(Long userId, String content, String channel) {
         this.userId = userId;
         this.content = content;
-        this.channel = channel;
+        this.channel = Channel.valueOf(channel);
     }
 
     public enum Channel {

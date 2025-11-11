@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
-public record CustomUserDetails(Long userId, String role) implements UserDetails {
+public record CustomUserDetails(Long userId, String teamCode, String role) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
