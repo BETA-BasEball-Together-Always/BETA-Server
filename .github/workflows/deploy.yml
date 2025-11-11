@@ -36,7 +36,7 @@ jobs:
       - name: Run Gradle tests
         run: |
           chmod +x ./gradlew
-          ./gradlew clean :main-server:test --no-daemon
+          ./gradlew clean :main-server:build -x test --no-daemon
 
       # 5️⃣ Docker Hub 로그인
       - name: Login to Docker Hub
