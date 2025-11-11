@@ -23,7 +23,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PostApplicationService {
+public class PostImageApplicationService {
 
     private final CommunityRedisRepository communityRedisRepository;
     private final PostImageWriteService postImageWriteService;
@@ -78,7 +78,7 @@ public class PostApplicationService {
         List<ImageDto> uploadImages = new ArrayList<>();
         try{
             uploadImages = postImageWriteService.uploadImages(images, userId);
-            return postImageWriteService.saveImagesMetadata(uploadImages, postId).stream()
+            return postImageWriteService.saveImagesMetadata(uploadImages, postId, userId).stream()
                     .map(PostImagesResponse::from)
                     .toList();
         } catch(ImageUploadFailedException e){

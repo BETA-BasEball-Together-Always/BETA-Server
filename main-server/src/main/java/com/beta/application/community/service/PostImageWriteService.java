@@ -9,14 +9,19 @@ import com.beta.infra.community.entity.Status;
 import com.beta.infra.community.gcs.GcsStorageClient;
 import com.beta.infra.community.repository.ImageErrorJpaRepository;
 import com.beta.infra.community.repository.PostImageJpaRepository;
+import com.beta.infra.community.repository.PostJpaRepository;
+import com.beta.presentation.community.request.PostCreateRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -27,6 +32,7 @@ public class PostImageWriteService {
     private final GcsStorageClient gcsStorageClient;
     private final PostImageJpaRepository postImageJpaRepository;
     private final ImageErrorJpaRepository imageErrorJpaRepository;
+    private final PostJpaRepository postJpaRepository;
 
     @Transactional
     public List<ImageDto> uploadImages(List<MultipartFile> images, Long userId) {
@@ -68,16 +74,18 @@ public class PostImageWriteService {
     }
 
     @Transactional
-    public List<ImageDto> saveImagesMetadata(List<ImageDto> uploadImages, Long postId) {
+    public List<ImageDto> saveImagesMetadata(List<ImageDto> uploadImages, Long postId, Long userId) {
         List<PostImageEntity> postImageList = uploadImages.stream()
                 .map(image -> PostImageEntity.builder()
                     .postId(postId)
+                    .userId(userId)
                     .imgUrl(image.getImgUrl())
                     .originName(image.getOriginName())
                     .newName(image.getNewName())
                     .fileSize(image.getFileSize())
                     .mimeType(image.getMimeType())
                     .sort(image.getSort())
+                    .status(postId == null ? Status.PENDING : Status.ACTIVE)
                     .build())
                 .toList();
 
@@ -89,12 +97,34 @@ public class PostImageWriteService {
     @Transactional
     public List<ImageDto> softDeleteImages(Long postId, List<Long> imageIds) {
         List<PostImageEntity> images = postImageJpaRepository.findAllByIdInAndPostIdAndStatus(imageIds, postId, Status.ACTIVE);
-        images.forEach(PostImageEntity::softDelete);
+        images.forEach(PostImageEntity::markForDeletion);
         return postImageJpaRepository.saveAll(images).stream()
                 .map(ImageDto::toDto)
                 .toList();
     }
 
+    @Transactional
+    public void publishPostImages(Long postId, List<PostCreateRequest.Image> images) {
+        Map<Long, Integer> sortMap = images.stream()
+                .collect(Collectors.toMap(PostCreateRequest.Image::getImageId, PostCreateRequest.Image::getSort));
+
+        List<PostImageEntity> postImages = postImageJpaRepository.findAllByIdInAndStatus(new ArrayList<>(sortMap.keySet()), Status.PENDING);
+
+        if(!postImages.isEmpty()) {
+            postImages.forEach(image -> {
+                image.imageActivateAndSort(postId, sortMap.get(image.getId()));
+            });
+            postImageJpaRepository.saveAll(postImages);
+        }
+    }
+
+    public void deletePostImages(Long postId) {
+        List<PostImageEntity> images = postImageJpaRepository.findAllByPostIdAndStatus(postId, Status.MARKED_FOR_DELETION);
+        if(!images.isEmpty()){
+            images.forEach(PostImageEntity::softDelete);
+            postImageJpaRepository.saveAll(images);
+        }
+    }
 
     private void saveImageError(String imageUrl, String fileName, Long userId) {
         imageErrorJpaRepository.save(
