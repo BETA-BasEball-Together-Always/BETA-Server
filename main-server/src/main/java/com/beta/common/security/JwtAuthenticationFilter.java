@@ -48,13 +48,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
                 
-                // 4. 토큰에서 사용자 ID와 role 추출
+                // 4. 토큰에서 사용자 ID, 팀 코드, role 추출
                 String userId = jwtTokenProvider.getSubject(token);
+                String teamCode = jwtTokenProvider.getClaim(token, JwtTokenProvider.ClaimEnum.TEAM_CODE.name(), String.class);
                 String role = jwtTokenProvider.getClaim(token, JwtTokenProvider.ClaimEnum.ROLE.name(), String.class);
 
                 if (userId != null && role != null) {
                     // 5. Spring Security 인증 객체 생성 (CustomUserDetails 사용)
-                    CustomUserDetails userDetails = new CustomUserDetails(Long.valueOf(userId), role);
+                    CustomUserDetails userDetails = new CustomUserDetails(Long.valueOf(userId), teamCode, role);
                     UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                             userDetails,
@@ -67,7 +68,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // 6. SecurityContext에 인증 정보 설정
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     
-                    log.debug("Successfully authenticated user: {}", userId);
+                    log.debug("Successfully authenticated user: {} with team: {}", userId, teamCode);
                 } else {
                     sendErrorResponse(response, ErrorResponse.of(ErrorCode.INVALID_TOKEN_USER_INFO));
                     return;
