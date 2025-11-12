@@ -65,27 +65,28 @@ public class PostController {
     }
 
     @PatchMapping("/{postId}/content")
-    public ResponseEntity<?> updateContent(
+    public ResponseEntity<PostUploadResponse> updateContent(
             @PathVariable Long postId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody PostContentUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(postApplicationService.updatePostContent(postId, idempotencyKey, request, userDetails.userId()));
     }
 
     @DeleteMapping("/{postId}")
     public ResponseEntity<Void> deletePost(
             @PathVariable Long postId,
-            @RequestHeader("Idempotency-Key") String idempotencyKey
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        postApplicationService.deletePost(postId, userDetails.userId(), idempotencyKey);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{postId}/emotions")
     public ResponseEntity<?> addOrUpdateEmotion(
             @PathVariable Long postId,
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody EmotionRequest request
     ) {
         return ResponseEntity.ok().build();

@@ -11,9 +11,9 @@ public interface PostImageJpaRepository extends JpaRepository<PostImageEntity, L
 
     List<PostImageEntity> findAllByIdInAndPostIdAndStatus(List<Long> imageIds, Long postId, Status status);
 
-    List<PostImageEntity> findAllByIdInAndPostIdAndStatusIn(List<Long> imageIds, Long postId, List<Status> statuses);
-
     List<PostImageEntity> findAllByIdInAndStatus(List<Long> imageIds, Status status);
 
     List<PostImageEntity> findAllByPostIdAndStatus(Long postId, Status status);
+
+    List<PostImageEntity> findAllByPostIdAndStatusIn(Long postId, List<Status> status);
 }

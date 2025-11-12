@@ -22,22 +22,22 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
     public Optional<PostWithImages> findPostWithImages(Long postId) {
         QPostEntity post = QPostEntity.postEntity;
         QPostImageEntity image = QPostImageEntity.postImageEntity;
-        Map<Long, PostWithImages> result = queryFactory.select(
-                post.id,
-                post.userId,
-                post.content,
-                post.channel,
-                post.commentCount,
-                post.emotionCount,
-                post.createdAt,
-                image.id,
-                image.imgUrl,
-                image.sort
-        ).from(post)
-                .leftJoin(image).on(
-                        post.id.eq(image.postId)
-                                .and(image.status.eq(Status.ACTIVE)))
-                .where(post.id.eq(postId))
+        Map<Long, PostWithImages> result =
+                queryFactory.select(
+                    post.id,
+                    post.userId,
+                    post.content,
+                    post.channel,
+                    post.commentCount,
+                    post.emotionCount,
+                    post.createdAt,
+                    image.id,
+                    image.imgUrl,
+                    image.sort
+                ).from(post)
+                        .leftJoin(image)
+                        .on(post.id.eq(image.postId).in(image.status.eq(Status.ACTIVE), image.status.eq(Status.MARKED_FOR_DELETION)))
+                .where(post.id.eq(postId).and(post.status.eq(Status.ACTIVE)))
                 .orderBy(post.createdAt.desc())
                 .transform(
                         GroupBy.groupBy(post.id).as(
