@@ -10,6 +10,7 @@ import com.beta.common.exception.idempotency.IdempotencyKeyException;
 import com.beta.infra.community.redis.CommunityRedisRepository;
 import com.beta.presentation.community.request.PostContentUpdateRequest;
 import com.beta.presentation.community.request.PostCreateRequest;
+import com.beta.presentation.community.response.PostDeleteResponse;
 import com.beta.presentation.community.response.PostUploadResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,9 +43,10 @@ public class PostApplicationService {
         return PostUploadResponse.success();
     }
 
-    public void deletePost(Long postId, Long userId, String idempotencyKey) {
+    public PostDeleteResponse deletePost(Long postId, Long userId, String idempotencyKey) {
         validateIdempotencyKeyOrThrow(CommunityRedisRepository.ApiPrefix.POST_DELETE, idempotencyKey);
         postWriteService.softDeletePost(postId, userId);
+        return PostDeleteResponse.success();
     }
 
     public List<HashtagDto> getHashtags() {
