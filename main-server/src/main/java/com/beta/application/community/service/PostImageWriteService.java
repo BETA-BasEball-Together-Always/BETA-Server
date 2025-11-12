@@ -103,21 +103,6 @@ public class PostImageWriteService {
                 .toList();
     }
 
-    @Transactional
-    public void publishPostImages(Long postId, List<PostCreateRequest.Image> images) {
-        Map<Long, Integer> sortMap = images.stream()
-                .collect(Collectors.toMap(PostCreateRequest.Image::getImageId, PostCreateRequest.Image::getSort));
-
-        List<PostImageEntity> postImages = postImageJpaRepository.findAllByIdInAndStatus(new ArrayList<>(sortMap.keySet()), Status.PENDING);
-
-        if(!postImages.isEmpty()) {
-            postImages.forEach(image -> {
-                image.imageActivateAndSort(postId, sortMap.get(image.getId()));
-            });
-            postImageJpaRepository.saveAll(postImages);
-        }
-    }
-
     public void deletePostImages(Long postId) {
         List<PostImageEntity> images = postImageJpaRepository.findAllByPostIdAndStatus(postId, Status.MARKED_FOR_DELETION);
         if(!images.isEmpty()){

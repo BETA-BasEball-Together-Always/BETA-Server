@@ -1,9 +1,14 @@
 package com.beta.unit.community;
 
 import com.beta.application.community.service.PostWriteService;
+import com.beta.common.exception.post.HashtagCountExceededException;
+import com.beta.common.exception.post.PostAccessDeniedException;
+import com.beta.common.exception.post.PostNotFoundException;
 import com.beta.infra.community.entity.PostEntity;
 import com.beta.infra.community.entity.PostHashtagEntity;
+import com.beta.infra.community.entity.PostImageEntity;
 import com.beta.infra.community.repository.PostHashtagRepository;
+import com.beta.infra.community.repository.PostImageJpaRepository;
 import com.beta.infra.community.repository.PostJpaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,8 +19,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -29,12 +36,15 @@ class PostWriteServiceTest {
     @Mock
     private PostHashtagRepository postHashtagRepository;
 
+    @Mock
+    private PostImageJpaRepository postImageJpaRepository;
+
     @InjectMocks
     private PostWriteService postWriteService;
 
     @Test
-    @DisplayName("게시글 저장 시 PostEntity를 저장하고 ID를 반환한다")
-    void should_returnPostId_when_savePost() {
+    @DisplayName("게시글 저장 시 PostEntity를 저장한다")
+    void should_savePost_when_savePost() {
         // given
         Long userId = 1L;
         String content = "테스트 게시글";
@@ -46,10 +56,9 @@ class PostWriteServiceTest {
         when(postJpaRepository.save(any(PostEntity.class))).thenReturn(savedPost);
 
         // when
-        Long result = postWriteService.savePost(userId, allChannel, content, teamCode);
+        postWriteService.savePost(userId, allChannel, content, teamCode, null, null);
 
         // then
-        assertThat(result).isEqualTo(100L);
         verify(postJpaRepository).save(any(PostEntity.class));
     }
 
@@ -69,7 +78,7 @@ class PostWriteServiceTest {
         ArgumentCaptor<PostEntity> captor = ArgumentCaptor.forClass(PostEntity.class);
 
         // when
-        postWriteService.savePost(userId, allChannel, content, teamCode);
+        postWriteService.savePost(userId, allChannel, content, teamCode, null, null);
 
         // then
         verify(postJpaRepository).save(captor.capture());
@@ -92,7 +101,7 @@ class PostWriteServiceTest {
         ArgumentCaptor<PostEntity> captor = ArgumentCaptor.forClass(PostEntity.class);
 
         // when
-        postWriteService.savePost(userId, allChannel, content, teamCode);
+        postWriteService.savePost(userId, allChannel, content, teamCode, null, null);
 
         // then
         verify(postJpaRepository).save(captor.capture());
@@ -100,43 +109,221 @@ class PostWriteServiceTest {
     }
 
     @Test
-    @DisplayName("해시태그 저장 시 PostHashtagEntity 리스트를 저장한다")
-    void should_savePostHashtagEntities_when_saveHashtags() {
+    @DisplayName("게시글 수정 시 권한이 없으면 PostAccessDeniedException을 발생시킨다")
+    void should_throwPostAccessDeniedException_when_updatePostWithoutPermission() {
         // given
-        Long postId = 1L;
-        List<Long> hashtagIds = List.of(10L, 20L, 30L);
+        Long userId = 1L;
+        Long postId = 100L;
+        Long otherUserId = 2L;
+        String newContent = "수정된 내용";
 
-        ArgumentCaptor<List<PostHashtagEntity>> captor = ArgumentCaptor.forClass(List.class);
+        PostEntity post = mock(PostEntity.class);
+        when(post.getUserId()).thenReturn(otherUserId);
+        when(postJpaRepository.findById(postId)).thenReturn(Optional.of(post));
 
-        // when
-        postWriteService.saveHashtags(postId, hashtagIds);
-
-        // then
-        verify(postHashtagRepository).saveAll(captor.capture());
-        List<PostHashtagEntity> captured = captor.getValue();
-
-        assertThat(captured).hasSize(3);
-        assertThat(captured).allMatch(entity -> entity.getPostId().equals(postId));
-        assertThat(captured).extracting(PostHashtagEntity::getHashtagId)
-                .containsExactlyInAnyOrder(10L, 20L, 30L);
+        // when & then
+        assertThatThrownBy(() -> postWriteService.updatePostContentAndHashtags(userId, postId, newContent, null, null))
+                .isInstanceOf(PostAccessDeniedException.class);
     }
 
     @Test
-    @DisplayName("빈 해시태그 리스트로 저장 시에도 정상 처리된다")
-    void should_saveEmptyList_when_saveHashtagsWithEmptyList() {
+    @DisplayName("게시글 수정 시 존재하지 않는 게시글이면 PostNotFoundException을 발생시킨다")
+    void should_throwPostNotFoundException_when_updateNonExistentPost() {
         // given
-        Long postId = 1L;
-        List<Long> emptyHashtagIds = List.of();
+        Long userId = 1L;
+        Long postId = 999L;
+        String newContent = "수정된 내용";
 
-        ArgumentCaptor<List<PostHashtagEntity>> captor = ArgumentCaptor.forClass(List.class);
+        when(postJpaRepository.findById(postId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> postWriteService.updatePostContentAndHashtags(userId, postId, newContent, null, null))
+                .isInstanceOf(PostNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("게시글 수정 시 내용을 업데이트한다")
+    void should_updateContent_when_updatePost() {
+        // given
+        Long userId = 1L;
+        Long postId = 100L;
+        String newContent = "수정된 내용";
+
+        PostEntity post = mock(PostEntity.class, RETURNS_DEEP_STUBS);
+        when(post.getUserId()).thenReturn(userId);
+        when(postJpaRepository.findById(postId)).thenReturn(Optional.of(post));
 
         // when
-        postWriteService.saveHashtags(postId, emptyHashtagIds);
+        postWriteService.updatePostContentAndHashtags(userId, postId, newContent, null, null);
 
         // then
+        verify(post).updateContent(newContent);
+        verify(postJpaRepository).save(post);
+        // 해시태그가 null이면 findByPostId가 호출되지 않음
+        verify(postHashtagRepository, never()).findByPostId(any());
+    }
+
+    @Test
+    @DisplayName("게시글 수정 시 해시태그를 삭제할 수 있다")
+    void should_deleteHashtags_when_updatePostWithDeleteHashtags() {
+        // given
+        Long userId = 1L;
+        Long postId = 100L;
+        String newContent = "수정된 내용";
+        List<Long> deleteHashtagIds = List.of(1L, 2L);
+
+        PostEntity post = mock(PostEntity.class, RETURNS_DEEP_STUBS);
+        when(post.getUserId()).thenReturn(userId);
+        when(postJpaRepository.findById(postId)).thenReturn(Optional.of(post));
+
+        PostHashtagEntity hashtag1 = mock(PostHashtagEntity.class);
+        when(hashtag1.getId()).thenReturn(1L);
+        PostHashtagEntity hashtag2 = mock(PostHashtagEntity.class);
+        when(hashtag2.getId()).thenReturn(2L);
+        PostHashtagEntity hashtag3 = mock(PostHashtagEntity.class);
+        when(hashtag3.getId()).thenReturn(3L);
+
+        when(postHashtagRepository.findByPostId(postId)).thenReturn(List.of(hashtag1, hashtag2, hashtag3));
+
+        // when
+        postWriteService.updatePostContentAndHashtags(userId, postId, newContent, null, deleteHashtagIds);
+
+        // then
+        ArgumentCaptor<List<PostHashtagEntity>> captor = ArgumentCaptor.forClass(List.class);
+        verify(postHashtagRepository).deleteAll(captor.capture());
+        assertThat(captor.getValue()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("게시글 수정 시 해시태그를 추가할 수 있다")
+    void should_addHashtags_when_updatePostWithNewHashtags() {
+        // given
+        Long userId = 1L;
+        Long postId = 100L;
+        String newContent = "수정된 내용";
+        List<Long> newHashtagIds = List.of(10L, 20L);
+
+        PostEntity post = mock(PostEntity.class, RETURNS_DEEP_STUBS);
+        when(post.getUserId()).thenReturn(userId);
+        when(postJpaRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postHashtagRepository.findByPostId(postId)).thenReturn(List.of());
+
+        // when
+        postWriteService.updatePostContentAndHashtags(userId, postId, newContent, newHashtagIds, null);
+
+        // then
+        ArgumentCaptor<List<PostHashtagEntity>> captor = ArgumentCaptor.forClass(List.class);
         verify(postHashtagRepository).saveAll(captor.capture());
         List<PostHashtagEntity> captured = captor.getValue();
 
-        assertThat(captured).isEmpty();
+        assertThat(captured).hasSize(2);
+        assertThat(captured).extracting(PostHashtagEntity::getHashtagId)
+                .containsExactlyInAnyOrder(10L, 20L);
+    }
+
+    @Test
+    @DisplayName("해시태그가 10개를 초과하면 HashtagCountExceededException을 발생시킨다")
+    void should_throwHashtagCountExceededException_when_hashtagCountExceeds10() {
+        // given
+        Long userId = 1L;
+        Long postId = 100L;
+        String newContent = "수정된 내용";
+
+        // 현재 5개의 해시태그
+        List<PostHashtagEntity> existingHashtags = List.of(
+                mock(PostHashtagEntity.class),
+                mock(PostHashtagEntity.class),
+                mock(PostHashtagEntity.class),
+                mock(PostHashtagEntity.class),
+                mock(PostHashtagEntity.class)
+        );
+
+        // 6개를 추가하려고 시도 (총 11개)
+        List<Long> newHashtagIds = List.of(10L, 20L, 30L, 40L, 50L, 60L);
+
+        PostEntity post = mock(PostEntity.class);
+        when(post.getUserId()).thenReturn(userId);
+        when(postJpaRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postHashtagRepository.findByPostId(postId)).thenReturn(existingHashtags);
+
+        // when & then
+        assertThatThrownBy(() -> postWriteService.updatePostContentAndHashtags(userId, postId, newContent, newHashtagIds, null))
+                .isInstanceOf(HashtagCountExceededException.class);
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 시 소프트 삭제를 수행한다")
+    void should_softDeletePost_when_deletePost() {
+        // given
+        Long userId = 1L;
+        Long postId = 100L;
+
+        PostEntity post = mock(PostEntity.class, RETURNS_DEEP_STUBS);
+        when(post.getUserId()).thenReturn(userId);
+        when(postJpaRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postImageJpaRepository.findAllByPostIdAndStatusIn(eq(postId), anyList())).thenReturn(List.of());
+
+        // when
+        postWriteService.softDeletePost(postId, userId);
+
+        // then
+        verify(post).softDelete();
+        verify(postJpaRepository).save(post);
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 시 권한이 없으면 PostAccessDeniedException을 발생시킨다")
+    void should_throwPostAccessDeniedException_when_deletePostWithoutPermission() {
+        // given
+        Long userId = 1L;
+        Long postId = 100L;
+        Long otherUserId = 2L;
+
+        PostEntity post = mock(PostEntity.class);
+        when(post.getUserId()).thenReturn(otherUserId);
+        when(postJpaRepository.findById(postId)).thenReturn(Optional.of(post));
+
+        // when & then
+        assertThatThrownBy(() -> postWriteService.softDeletePost(postId, userId))
+                .isInstanceOf(PostAccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 시 존재하지 않는 게시글이면 PostNotFoundException을 발생시킨다")
+    void should_throwPostNotFoundException_when_deleteNonExistentPost() {
+        // given
+        Long userId = 1L;
+        Long postId = 999L;
+
+        when(postJpaRepository.findById(postId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> postWriteService.softDeletePost(postId, userId))
+                .isInstanceOf(PostNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 시 연관된 이미지도 소프트 삭제한다")
+    void should_softDeleteImages_when_deletePost() {
+        // given
+        Long userId = 1L;
+        Long postId = 100L;
+
+        PostEntity post = mock(PostEntity.class, RETURNS_DEEP_STUBS);
+        when(post.getUserId()).thenReturn(userId);
+        when(postJpaRepository.findById(postId)).thenReturn(Optional.of(post));
+
+        PostImageEntity image1 = mock(PostImageEntity.class);
+        PostImageEntity image2 = mock(PostImageEntity.class);
+        List<PostImageEntity> images = List.of(image1, image2);
+        when(postImageJpaRepository.findAllByPostIdAndStatusIn(eq(postId), anyList())).thenReturn(images);
+
+        // when
+        postWriteService.softDeletePost(postId, userId);
+
+        // then
+        verify(image1).softDelete();
+        verify(image2).softDelete();
+        verify(postImageJpaRepository).saveAll(images);
     }
 }

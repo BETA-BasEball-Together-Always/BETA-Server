@@ -3,6 +3,7 @@ package com.beta.common.exception;
 import com.beta.common.exception.auth.*;
 import com.beta.common.exception.idempotency.IdempotencyKeyException;
 import com.beta.common.exception.image.*;
+import com.beta.common.exception.post.HashtagCountExceededException;
 import com.beta.common.exception.post.PostAccessDeniedException;
 import com.beta.common.exception.post.PostNotFoundException;
 import com.beta.common.exception.team.TeamNotFoundException;
@@ -145,6 +146,17 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.POST_ACCESS_DENIED);
         return ResponseEntity.status(ErrorCode.POST_ACCESS_DENIED.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 해시태그 개수 초과
+     */
+    @ExceptionHandler(HashtagCountExceededException.class)
+    public ResponseEntity<ErrorResponse> handleHashtagCountExceededException(HashtagCountExceededException e) {
+        log.warn("Hashtag count exceeded: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.HASHTAG_COUNT_EXCEEDED);
+        return ResponseEntity.status(ErrorCode.HASHTAG_COUNT_EXCEEDED.getStatus()).body(errorResponse);
     }
 
     /**

@@ -8,8 +8,11 @@ import com.beta.application.community.service.PostReadService;
 import com.beta.application.community.service.PostWriteService;
 import com.beta.common.exception.idempotency.IdempotencyKeyException;
 import com.beta.infra.community.redis.CommunityRedisRepository;
+import com.beta.presentation.community.request.PostContentUpdateRequest;
 import com.beta.presentation.community.request.PostCreateRequest;
+import com.beta.presentation.community.response.PostDeleteResponse;
 import com.beta.presentation.community.response.PostUploadResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,22 +26,27 @@ public class PostApplicationService {
 
     private final CommunityRedisRepository communityRedisRepository;
     private final PostWriteService postWriteService;
-    private final PostImageWriteService postImageWriteService;
     private final FindUserService findUserService;
     private final HashtagReadService hashtagReadService;
 
-    @Transactional
     public PostUploadResponse uploadPost(String idempotencyKey, PostCreateRequest request, Long userId, String teamCode) {
         validateIdempotencyKeyOrThrow(CommunityRedisRepository.ApiPrefix.POST, idempotencyKey);
         findUserService.findUserById(userId); // 사용자 존재 여부 확인
-        Long postId = postWriteService.savePost(userId, request.getAllChannel(), request.getContent(), teamCode);
-        if(request.getHashtags() != null && !request.getHashtags().isEmpty()) {
-            postWriteService.saveHashtags(postId, request.getHashtags());
-        }
-        if(request.getImages() != null && !request.getImages().isEmpty()) {
-            postImageWriteService.publishPostImages(postId, request.getImages());
-        }
+        postWriteService.savePost(userId, request.getAllChannel(), request.getContent(), teamCode, request.getHashtags(), request.getImages());
         return PostUploadResponse.success();
+    }
+
+    public PostUploadResponse updatePostContent(Long postId, String idempotencyKey, PostContentUpdateRequest request, Long userId) {
+        validateIdempotencyKeyOrThrow(CommunityRedisRepository.ApiPrefix.POST_UPDATE, idempotencyKey);
+        findUserService.findUserById(userId);
+        postWriteService.updatePostContentAndHashtags(userId, postId, request.getContent(), request.getHashtags(), request.getDeleteHashtags());
+        return PostUploadResponse.success();
+    }
+
+    public PostDeleteResponse deletePost(Long postId, Long userId, String idempotencyKey) {
+        validateIdempotencyKeyOrThrow(CommunityRedisRepository.ApiPrefix.POST_DELETE, idempotencyKey);
+        postWriteService.softDeletePost(postId, userId);
+        return PostDeleteResponse.success();
     }
 
     public List<HashtagDto> getHashtags() {

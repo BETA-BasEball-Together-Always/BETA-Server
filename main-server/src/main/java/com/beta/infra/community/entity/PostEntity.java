@@ -45,6 +45,15 @@ public class PostEntity extends BaseEntity {
         this.channel = Channel.valueOf(channel);
     }
 
+    public void updateContent(String content) {
+        this.content = content;
+    }
+
+    public void softDelete() {
+        this.status = Status.DELETED;
+        this.deletedAt = LocalDateTime.now();
+    }
+
     public enum Channel {
         DOOSAN,
         LG,

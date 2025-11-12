@@ -18,5 +18,7 @@ public class PostContentUpdateRequest {
     private String content;
 
     @Size(max = 10, message = "해시태그는 최대 10개까지 가능합니다")
-    private List<String> hashtags;
+    private List<Long> hashtags;
+
+    private List<Long> deleteHashtags;
 }

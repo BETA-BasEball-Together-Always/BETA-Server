@@ -7,6 +7,7 @@ import com.beta.common.security.CustomUserDetails;
 import com.beta.presentation.community.request.*;
 import com.beta.presentation.community.response.HashtagListResponse;
 import com.beta.presentation.community.response.ImageDeleteResponse;
+import com.beta.presentation.community.response.PostDeleteResponse;
 import com.beta.presentation.community.response.PostImagesResponse;
 import com.beta.presentation.community.response.PostUploadResponse;
 import jakarta.validation.Valid;
@@ -65,27 +66,27 @@ public class PostController {
     }
 
     @PatchMapping("/{postId}/content")
-    public ResponseEntity<?> updateContent(
+    public ResponseEntity<PostUploadResponse> updateContent(
             @PathVariable Long postId,
             @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody PostContentUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(postApplicationService.updatePostContent(postId, idempotencyKey, request, userDetails.userId()));
     }
 
     @DeleteMapping("/{postId}")
-    public ResponseEntity<Void> deletePost(
+    public ResponseEntity<PostDeleteResponse> deletePost(
             @PathVariable Long postId,
-            @RequestHeader("Idempotency-Key") String idempotencyKey
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(postApplicationService.deletePost(postId, userDetails.userId(), idempotencyKey));
     }
 
     @PostMapping("/{postId}/emotions")
     public ResponseEntity<?> addOrUpdateEmotion(
             @PathVariable Long postId,
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody EmotionRequest request
     ) {
         return ResponseEntity.ok().build();
