@@ -170,7 +170,7 @@ class PostWriteServiceTest {
         Long userId = 1L;
         Long postId = 100L;
         String newContent = "수정된 내용";
-        List<Long> deleteHashtagIds = List.of(1L, 2L);
+        List<Long> deleteHashtagIds = List.of(1L, 2L); // PostHashtagEntity의 ID
 
         PostEntity post = mock(PostEntity.class, RETURNS_DEEP_STUBS);
         when(post.getUserId()).thenReturn(userId);
@@ -178,12 +178,16 @@ class PostWriteServiceTest {
 
         PostHashtagEntity hashtag1 = mock(PostHashtagEntity.class);
         when(hashtag1.getId()).thenReturn(1L);
+        when(hashtag1.getHashtagId()).thenReturn(100L);
         PostHashtagEntity hashtag2 = mock(PostHashtagEntity.class);
         when(hashtag2.getId()).thenReturn(2L);
+        when(hashtag2.getHashtagId()).thenReturn(200L);
         PostHashtagEntity hashtag3 = mock(PostHashtagEntity.class);
         when(hashtag3.getId()).thenReturn(3L);
+        when(hashtag3.getHashtagId()).thenReturn(300L);
 
         when(postHashtagRepository.findByPostId(postId)).thenReturn(List.of(hashtag1, hashtag2, hashtag3));
+        when(hashtagJpaRepository.findAllById(anyList())).thenReturn(List.of());
 
         // when
         postWriteService.updatePostContentAndHashtags(userId, postId, newContent, null, deleteHashtagIds);
@@ -201,15 +205,25 @@ class PostWriteServiceTest {
         Long userId = 1L;
         Long postId = 100L;
         String newContent = "수정된 내용";
-        List<Long> newHashtagIds = List.of(10L, 20L);
+        List<String> newHashtags = List.of("야구", "응원");
 
         PostEntity post = mock(PostEntity.class, RETURNS_DEEP_STUBS);
         when(post.getUserId()).thenReturn(userId);
         when(postJpaRepository.findById(postId)).thenReturn(Optional.of(post));
         when(postHashtagRepository.findByPostId(postId)).thenReturn(List.of());
 
+        // Mock existing hashtags
+        HashtagEntity hashtag1 = mock(HashtagEntity.class);
+        when(hashtag1.getTagName()).thenReturn("야구");
+        when(hashtag1.getId()).thenReturn(10L);
+        HashtagEntity hashtag2 = mock(HashtagEntity.class);
+        when(hashtag2.getTagName()).thenReturn("응원");
+        when(hashtag2.getId()).thenReturn(20L);
+
+        when(hashtagJpaRepository.findByTagNameIn(newHashtags)).thenReturn(List.of(hashtag1, hashtag2));
+
         // when
-        postWriteService.updatePostContentAndHashtags(userId, postId, newContent, newHashtagIds, null);
+        postWriteService.updatePostContentAndHashtags(userId, postId, newContent, newHashtags, null);
 
         // then
         ArgumentCaptor<List<PostHashtagEntity>> captor = ArgumentCaptor.forClass(List.class);
@@ -222,24 +236,22 @@ class PostWriteServiceTest {
     }
 
     @Test
-    @DisplayName("해시태그가 10개를 초과하면 HashtagCountExceededException을 발생시킨다")
-    void should_throwHashtagCountExceededException_when_hashtagCountExceeds10() {
+    @DisplayName("해시태그가 5개를 초과하면 HashtagCountExceededException을 발생시킨다")
+    void should_throwHashtagCountExceededException_when_hashtagCountExceeds5() {
         // given
         Long userId = 1L;
         Long postId = 100L;
         String newContent = "수정된 내용";
 
-        // 현재 5개의 해시태그
+        // 현재 3개의 해시태그
         List<PostHashtagEntity> existingHashtags = List.of(
-                mock(PostHashtagEntity.class),
-                mock(PostHashtagEntity.class),
                 mock(PostHashtagEntity.class),
                 mock(PostHashtagEntity.class),
                 mock(PostHashtagEntity.class)
         );
 
-        // 6개를 추가하려고 시도 (총 11개)
-        List<Long> newHashtagIds = List.of(10L, 20L, 30L, 40L, 50L, 60L);
+        // 3개를 추가하려고 시도 (총 6개, 5개 초과)
+        List<String> newHashtags = List.of("야구", "응원", "KIA");
 
         PostEntity post = mock(PostEntity.class);
         when(post.getUserId()).thenReturn(userId);
@@ -247,7 +259,7 @@ class PostWriteServiceTest {
         when(postHashtagRepository.findByPostId(postId)).thenReturn(existingHashtags);
 
         // when & then
-        assertThatThrownBy(() -> postWriteService.updatePostContentAndHashtags(userId, postId, newContent, newHashtagIds, null))
+        assertThatThrownBy(() -> postWriteService.updatePostContentAndHashtags(userId, postId, newContent, newHashtags, null))
                 .isInstanceOf(HashtagCountExceededException.class);
     }
 
