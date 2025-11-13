@@ -13,15 +13,26 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class HashtagEntity extends BaseEntity {
 
-    @Column(name = "name", nullable = false, unique = true, length = 50)
-    private String name;
+    @Column(name = "tag_name", nullable = false, unique = true, length = 50)
+    private String tagName;
 
     @Column(name = "usage_count", nullable = false)
     private Long usageCount = 0L;
 
     @Builder
-    public HashtagEntity(String name) {
-        this.name = name;
+    public HashtagEntity(String tagName) {
+        this.tagName = tagName;
         this.usageCount = 0L;
+    }
+
+    // 비즈니스 메서드
+    public void incrementUsageCount() {
+        this.usageCount++;
+    }
+
+    public void decrementUsageCount() {
+        if (this.usageCount > 0) {
+            this.usageCount--;
+        }
     }
 }
