@@ -39,7 +39,7 @@ public class PostApplicationService {
     public PostUploadResponse updatePostContent(Long postId, String idempotencyKey, PostContentUpdateRequest request, Long userId) {
         validateIdempotencyKeyOrThrow(CommunityRedisRepository.ApiPrefix.POST_UPDATE, idempotencyKey);
         findUserService.findUserById(userId);
-        postWriteService.updatePostContentAndHashtags(userId, postId, request.getContent(), request.getHashtags(), request.getDeleteHashtags());
+        postWriteService.updatePostContentAndHashtags(userId, postId, request.getContent(), request.getHashtags(), request.getDeleteHashtagIds());
         return PostUploadResponse.success();
     }
 

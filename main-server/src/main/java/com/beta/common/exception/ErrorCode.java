@@ -41,7 +41,7 @@ public enum ErrorCode {
     // 게시글 관련 에러
     POST_NOT_FOUND("POST001", "게시글을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     POST_ACCESS_DENIED("POST002", "게시글에 대한 권한이 없습니다", HttpStatus.FORBIDDEN),
-    HASHTAG_COUNT_EXCEEDED("POST003", "해시태그는 최대 10개까지 가능합니다", HttpStatus.BAD_REQUEST),
+    HASHTAG_COUNT_EXCEEDED("POST003", "해시태그는 최대 5개까지 가능합니다", HttpStatus.BAD_REQUEST),
 
     // 이미지 관련 에러
     INVALID_IMAGE_TYPE("IMAGE001", "지원하지 않는 파일 형식입니다 (jpg, jpeg, png만 가능)", HttpStatus.BAD_REQUEST),

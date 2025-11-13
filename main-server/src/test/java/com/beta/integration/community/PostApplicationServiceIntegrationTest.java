@@ -110,7 +110,7 @@ class PostApplicationServiceIntegrationTest extends TestContainer {
                 "테스트 게시글 내용",
                 false,
                 null,
-                List.of(hashtag1.getId(), hashtag2.getId())
+                List.of("야구", "응원")
         );
 
         // when
@@ -134,6 +134,11 @@ class PostApplicationServiceIntegrationTest extends TestContainer {
         assertThat(savedHashtags).hasSize(2);
         assertThat(savedHashtags).extracting(PostHashtagEntity::getHashtagId)
                 .containsExactlyInAnyOrder(hashtag1.getId(), hashtag2.getId());
+
+        // DB 검증: 기존 해시태그의 usageCount가 증가했는지
+        List<HashtagEntity> hashtags = hashtagJpaRepository.findAll();
+        assertThat(hashtags).hasSize(2);
+        assertThat(hashtags).allMatch(h -> h.getUsageCount() == 1L);
     }
 
     @Test
@@ -363,7 +368,7 @@ class PostApplicationServiceIntegrationTest extends TestContainer {
                 "원본 게시글 내용",
                 false,
                 null,
-                List.of(hashtag1.getId())
+                List.of("야구")
         );
         postApplicationService.uploadPost(uploadKey, createRequest, testUser.getId(), testTeam.getCode());
 
@@ -411,7 +416,7 @@ class PostApplicationServiceIntegrationTest extends TestContainer {
         String updateKey = UUID.randomUUID().toString();
         PostContentUpdateRequest updateRequest = new PostContentUpdateRequest(
                 "수정된 게시글 내용",
-                List.of(hashtag1.getId(), hashtag2.getId()),
+                List.of("야구", "응원"),
                 null
         );
 
@@ -435,7 +440,7 @@ class PostApplicationServiceIntegrationTest extends TestContainer {
                 "원본 게시글 내용",
                 false,
                 null,
-                List.of(hashtag1.getId(), hashtag2.getId())
+                List.of("야구", "응원")
         );
         postApplicationService.uploadPost(uploadKey, createRequest, testUser.getId(), testTeam.getCode());
 
@@ -471,7 +476,7 @@ class PostApplicationServiceIntegrationTest extends TestContainer {
                 "원본 게시글 내용",
                 false,
                 null,
-                List.of(hashtag1.getId())
+                List.of("야구")
         );
         postApplicationService.uploadPost(uploadKey, createRequest, testUser.getId(), testTeam.getCode());
 
@@ -485,7 +490,7 @@ class PostApplicationServiceIntegrationTest extends TestContainer {
         String updateKey = UUID.randomUUID().toString();
         PostContentUpdateRequest updateRequest = new PostContentUpdateRequest(
                 "수정된 게시글 내용",
-                List.of(hashtag2.getId()),
+                List.of("응원"),
                 List.of(hashtagToDeleteId)
         );
 
@@ -730,7 +735,7 @@ class PostApplicationServiceIntegrationTest extends TestContainer {
                 "해시태그가 있는 게시글",
                 false,
                 null,
-                List.of(hashtag1.getId(), hashtag2.getId())
+                List.of("야구", "응원")
         );
         postApplicationService.uploadPost(uploadKey, createRequest, testUser.getId(), testTeam.getCode());
 

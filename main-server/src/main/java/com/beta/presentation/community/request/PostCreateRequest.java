@@ -23,8 +23,8 @@ public class PostCreateRequest {
     @Size(max = 5, message = "이미지는 최대 5개까지 가능합니다")
     private List<Image> images;
 
-    @Size(max = 10, message = "해시태그는 최대 10개까지 가능합니다")
-    private List<Long> hashtags;
+    @Size(max = 5, message = "해시태그는 최대 5개까지 가능합니다")
+    private List<@Size(max = 20, message = "해시태그는 20자 이하여야 합니다") String> hashtags;
 
     @Getter
     @NoArgsConstructor
