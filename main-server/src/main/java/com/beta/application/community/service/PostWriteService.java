@@ -4,6 +4,7 @@ import com.beta.common.exception.post.HashtagCountExceededException;
 import com.beta.common.exception.post.PostAccessDeniedException;
 import com.beta.common.exception.post.PostNotFoundException;
 import com.beta.infra.community.entity.*;
+import com.beta.infra.community.repository.HashtagJpaRepository;
 import com.beta.infra.community.repository.PostHashtagRepository;
 import com.beta.infra.community.repository.PostImageJpaRepository;
 import com.beta.infra.community.repository.PostJpaRepository;
@@ -28,9 +29,10 @@ public class PostWriteService {
     private final PostJpaRepository postJpaRepository;
     private final PostHashtagRepository postHashtagJpaRepository;
     private final PostImageJpaRepository postImageJpaRepository;
+    private final HashtagJpaRepository hashtagJpaRepository;
 
     @Transactional
-    public void savePost(Long userId, Boolean allChannel, String content, String teamCode, List<Long> hashtags, List<PostCreateRequest.Image> images) {
+    public void savePost(Long userId, Boolean allChannel, String content, String teamCode, List<String> hashtags, List<PostCreateRequest.Image> images) {
         String channel = teamCode.trim().toUpperCase();
         if(allChannel != null && allChannel) {
             channel = "ALL";
@@ -46,7 +48,7 @@ public class PostWriteService {
     }
 
     @Transactional
-    public void updatePostContentAndHashtags(Long userId, Long postId, String content, List<Long> hashtags, List<Long> deleteHashtags) {
+    public void updatePostContentAndHashtags(Long userId, Long postId, String content, List<String> addHashtags, List<Long> deleteHashtagIds) {
         PostEntity post = postJpaRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
 
@@ -54,7 +56,7 @@ public class PostWriteService {
             throw new PostAccessDeniedException();
         }
 
-        updateHashtags(postId, hashtags, deleteHashtags);
+        updateHashtags(postId, addHashtags, deleteHashtagIds);
         post.updateContent(content);
         postJpaRepository.save(post);
     }
@@ -78,30 +80,39 @@ public class PostWriteService {
         }
     }
 
-    private void updateHashtags(Long postId, List<Long> hashtags, List<Long> deleteHashtags) {
-        if((deleteHashtags == null || deleteHashtags.isEmpty()) && (hashtags == null || hashtags.isEmpty())) {
+    private void updateHashtags(Long postId, List<String> addHashtags, List<Long> deleteHashtagIds) {
+        if((deleteHashtagIds == null || deleteHashtagIds.isEmpty()) && (addHashtags == null || addHashtags.isEmpty())) {
             return;
         }
-        List<PostHashtagEntity> hashtagEntities = postHashtagJpaRepository.findByPostId(postId);
-        int hashtagCount = (hashtagEntities.size() - (deleteHashtags != null ? deleteHashtags.size() : 0)) + (hashtags != null ? hashtags.size() : 0);
-        if(hashtagCount > 10) {
+
+        List<PostHashtagEntity> currentPostHashtags = postHashtagJpaRepository.findByPostId(postId);
+
+        int finalCount = currentPostHashtags.size()
+                         - (deleteHashtagIds != null ? deleteHashtagIds.size() : 0)
+                         + (addHashtags != null ? addHashtags.size() : 0);
+        if(finalCount > 5) {
             throw new HashtagCountExceededException();
         }
-        if(deleteHashtags != null && !deleteHashtags.isEmpty()) {
-            Set<Long> deleteHashtagsSet = Set.copyOf(deleteHashtags);
-            List<PostHashtagEntity> toBeDeleted = hashtagEntities.stream()
-                    .filter(entity -> deleteHashtagsSet.contains(entity.getId()))
+
+        if(deleteHashtagIds != null && !deleteHashtagIds.isEmpty()) {
+            Set<Long> deleteSet = Set.copyOf(deleteHashtagIds);
+            List<PostHashtagEntity> toBeDeleted = currentPostHashtags.stream()
+                    .filter(entity -> deleteSet.contains(entity.getId()))
                     .toList();
+
+            List<Long> deletedHashtagIds = toBeDeleted.stream()
+                    .map(PostHashtagEntity::getHashtagId)
+                    .toList();
+
+            List<HashtagEntity> hashtagsToDecrement = hashtagJpaRepository.findAllById(deletedHashtagIds);
+            hashtagsToDecrement.forEach(HashtagEntity::decrementUsageCount);
+            hashtagJpaRepository.saveAll(hashtagsToDecrement);
+
             postHashtagJpaRepository.deleteAll(toBeDeleted);
         }
-        if(hashtags != null && !hashtags.isEmpty()) {
-            List<PostHashtagEntity> toBeAdded = hashtags.stream()
-                    .map(hashtagId -> PostHashtagEntity.builder()
-                            .postId(postId)
-                            .hashtagId(hashtagId)
-                            .build())
-                    .toList();
-            postHashtagJpaRepository.saveAll(toBeAdded);
+
+        if(addHashtags != null && !addHashtags.isEmpty()) {
+            saveHashtags(postId, addHashtags);
         }
     }
 
@@ -122,17 +133,45 @@ public class PostWriteService {
         }
     }
 
-    private void saveHashtags(Long postId, List<Long> hashtags) {
+    private void saveHashtags(Long postId, List<String> hashtags) {
         if(hashtags == null || hashtags.isEmpty()) {
             return;
         }
-        List<PostHashtagEntity> hashtagEntities = hashtags.stream()
-                .map(hashtagId -> PostHashtagEntity.builder()
-                        .postId(postId)
-                        .hashtagId(hashtagId)
+        if(hashtags.size() > 5) {
+            throw new HashtagCountExceededException();
+        }
+
+        List<HashtagEntity> existingHashtags = hashtagJpaRepository.findByTagNameIn(hashtags);
+        Map<String, Long> existingHashtagMap = existingHashtags.stream()
+                .collect(Collectors.toMap(HashtagEntity::getTagName, HashtagEntity::getId));
+
+        existingHashtags.forEach(HashtagEntity::incrementUsageCount);
+        hashtagJpaRepository.saveAll(existingHashtags);
+
+        List<String> newHashtagNames = hashtags.stream()
+                .filter(name -> !existingHashtagMap.containsKey(name))
+                .toList();
+
+        List<HashtagEntity> newHashtags = newHashtagNames.stream()
+                .map(name -> HashtagEntity.builder()
+                        .tagName(name)
                         .build())
                 .toList();
 
-        postHashtagJpaRepository.saveAll(hashtagEntities);
+        if (!newHashtags.isEmpty()) {
+            List<HashtagEntity> savedNewHashtags = hashtagJpaRepository.saveAll(newHashtags);
+            savedNewHashtags.forEach(hashtag ->
+                existingHashtagMap.put(hashtag.getTagName(), hashtag.getId())
+            );
+        }
+
+        List<PostHashtagEntity> postHashtags = hashtags.stream()
+                .map(name -> PostHashtagEntity.builder()
+                        .postId(postId)
+                        .hashtagId(existingHashtagMap.get(name))
+                        .build())
+                .toList();
+
+        postHashtagJpaRepository.saveAll(postHashtags);
     }
 }
