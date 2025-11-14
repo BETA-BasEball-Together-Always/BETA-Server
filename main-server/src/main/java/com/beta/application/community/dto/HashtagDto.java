@@ -13,7 +13,7 @@ public class HashtagDto {
     public static HashtagDto from(HashtagEntity entity) {
         return HashtagDto.builder()
                 .hashtagId(entity.getId())
-                .name(entity.getName())
+                .name(entity.getTagName())
                 .build();
     }
 }
