@@ -4,9 +4,11 @@ import com.beta.application.community.service.PostWriteService;
 import com.beta.common.exception.post.HashtagCountExceededException;
 import com.beta.common.exception.post.PostAccessDeniedException;
 import com.beta.common.exception.post.PostNotFoundException;
+import com.beta.infra.community.entity.HashtagEntity;
 import com.beta.infra.community.entity.PostEntity;
 import com.beta.infra.community.entity.PostHashtagEntity;
 import com.beta.infra.community.entity.PostImageEntity;
+import com.beta.infra.community.repository.HashtagJpaRepository;
 import com.beta.infra.community.repository.PostHashtagRepository;
 import com.beta.infra.community.repository.PostImageJpaRepository;
 import com.beta.infra.community.repository.PostJpaRepository;
@@ -38,6 +40,9 @@ class PostWriteServiceTest {
 
     @Mock
     private PostImageJpaRepository postImageJpaRepository;
+
+    @Mock
+    private HashtagJpaRepository hashtagJpaRepository;
 
     @InjectMocks
     private PostWriteService postWriteService;
@@ -178,16 +183,12 @@ class PostWriteServiceTest {
 
         PostHashtagEntity hashtag1 = mock(PostHashtagEntity.class);
         when(hashtag1.getId()).thenReturn(1L);
-        when(hashtag1.getHashtagId()).thenReturn(100L);
         PostHashtagEntity hashtag2 = mock(PostHashtagEntity.class);
         when(hashtag2.getId()).thenReturn(2L);
-        when(hashtag2.getHashtagId()).thenReturn(200L);
         PostHashtagEntity hashtag3 = mock(PostHashtagEntity.class);
         when(hashtag3.getId()).thenReturn(3L);
-        when(hashtag3.getHashtagId()).thenReturn(300L);
 
         when(postHashtagRepository.findByPostId(postId)).thenReturn(List.of(hashtag1, hashtag2, hashtag3));
-        when(hashtagJpaRepository.findAllById(anyList())).thenReturn(List.of());
 
         // when
         postWriteService.updatePostContentAndHashtags(userId, postId, newContent, null, deleteHashtagIds);

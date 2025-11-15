@@ -580,11 +580,11 @@ class PostApplicationServiceIntegrationTest extends TestContainer {
                 false,
                 null,
                 List.of(
-                        hashtag1.getId(),
-                        hashtag2.getId(),
-                        additionalHashtags.get(0).getId(),
-                        additionalHashtags.get(1).getId(),
-                        additionalHashtags.get(2).getId()
+                        hashtag1.getTagName(),
+                        hashtag2.getTagName(),
+                        additionalHashtags.get(0).getTagName(),
+                        additionalHashtags.get(1).getTagName(),
+                        additionalHashtags.get(2).getTagName()
                 )
         );
         postApplicationService.uploadPost(uploadKey, createRequest, testUser.getId(), testTeam.getCode());
@@ -597,12 +597,12 @@ class PostApplicationServiceIntegrationTest extends TestContainer {
         PostContentUpdateRequest updateRequest = new PostContentUpdateRequest(
                 "수정된 게시글 내용",
                 List.of(
-                        additionalHashtags.get(3).getId(),
-                        additionalHashtags.get(4).getId(),
-                        additionalHashtags.get(5).getId(),
-                        additionalHashtags.get(6).getId(),
-                        additionalHashtags.get(7).getId(),
-                        additionalHashtags.get(0).getId()
+                        additionalHashtags.get(3).getTagName(),
+                        additionalHashtags.get(4).getTagName(),
+                        additionalHashtags.get(5).getTagName(),
+                        additionalHashtags.get(6).getTagName(),
+                        additionalHashtags.get(7).getTagName(),
+                        additionalHashtags.get(0).getTagName()
                 ),
                 null
         );

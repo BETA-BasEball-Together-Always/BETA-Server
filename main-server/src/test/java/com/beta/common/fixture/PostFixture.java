@@ -66,7 +66,7 @@ public class PostFixture {
 
     public static HashtagEntity createHashtag(String name) {
         return HashtagEntity.builder()
-                .name(name)
+                .tagName(name)
                 .build();
     }
 
