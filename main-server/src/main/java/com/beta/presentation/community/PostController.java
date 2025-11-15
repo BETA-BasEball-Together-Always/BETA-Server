@@ -2,7 +2,7 @@ package com.beta.presentation.community;
 
 import com.beta.application.community.PostApplicationService;
 import com.beta.application.community.PostImageApplicationService;
-import com.beta.application.community.dto.PostWithImagesDto;
+import com.beta.common.idempotency.Idempotent;
 import com.beta.common.security.CustomUserDetails;
 import com.beta.presentation.community.request.*;
 import com.beta.presentation.community.response.HashtagListResponse;
@@ -27,61 +27,61 @@ public class PostController {
     private final PostImageApplicationService postImageApplicationService;
     private final PostApplicationService postApplicationService;
 
+    @Idempotent(ttlSeconds = 3)
     @PostMapping(value = "/images", consumes = {"multipart/form-data"})
     public ResponseEntity<List<PostImagesResponse>> uploadImages(
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestParam("images") List<MultipartFile> images,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(postImageApplicationService.uploadImages(idempotencyKey, images, userDetails.userId()));
+        return ResponseEntity.ok(postImageApplicationService.uploadImages(images, userDetails.userId()));
     }
 
+    @Idempotent(ttlSeconds = 3)
     @PostMapping(value = "/{postId}/images", consumes = {"multipart/form-data"})
     public ResponseEntity<List<PostImagesResponse>> addImages(
             @PathVariable Long postId,
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @RequestParam("images") List<MultipartFile> images,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(postImageApplicationService.insertImagesToPost(idempotencyKey, postId, images, userDetails.userId()));
+        return ResponseEntity.ok(postImageApplicationService.insertImagesToPost(postId, images, userDetails.userId()));
     }
 
+    @Idempotent(ttlSeconds = 3)
     @DeleteMapping("/{postId}/images")
     public ResponseEntity<ImageDeleteResponse> deleteImages(
             @PathVariable Long postId,
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody ImageDeleteRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(postImageApplicationService.softDeleteImages(postId, idempotencyKey, request, userDetails.userId()));
+        return ResponseEntity.ok(postImageApplicationService.softDeleteImages(postId, request, userDetails.userId()));
     }
 
+    @Idempotent(ttlSeconds = 5)
     @PostMapping
     public ResponseEntity<PostUploadResponse> uploadPost(
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody PostCreateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(postApplicationService.uploadPost(idempotencyKey, request, userDetails.userId(), userDetails.teamCode()));
+        return ResponseEntity.ok(postApplicationService.uploadPost(request, userDetails.userId(), userDetails.teamCode()));
     }
 
+    @Idempotent(ttlSeconds = 5)
     @PatchMapping("/{postId}/content")
     public ResponseEntity<PostUploadResponse> updateContent(
             @PathVariable Long postId,
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody PostContentUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(postApplicationService.updatePostContent(postId, idempotencyKey, request, userDetails.userId()));
+        return ResponseEntity.ok(postApplicationService.updatePostContent(postId, request, userDetails.userId()));
     }
 
+    @Idempotent(ttlSeconds = 5)
     @DeleteMapping("/{postId}")
     public ResponseEntity<PostDeleteResponse> deletePost(
             @PathVariable Long postId,
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(postApplicationService.deletePost(postId, userDetails.userId(), idempotencyKey));
+        return ResponseEntity.ok(postApplicationService.deletePost(postId, userDetails.userId()));
     }
 
     @PostMapping("/{postId}/emotions")
