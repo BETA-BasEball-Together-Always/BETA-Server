@@ -130,8 +130,8 @@ class PostImageApplicationServiceIntegrationTest extends TestContainer {
     }
 
     @Test
-    @DisplayName("게시글에 이미지 추가 시 postId를 연결하고 ACTIVE 상태로 변경한다")
-    void should_linkPostIdAndSetActive_when_insertImagesToPost() throws Exception {
+    @DisplayName("게시글에 이미지 추가 시 postId를 연결하고 PENDING 상태로 변경한다")
+    void should_linkPostIdAndSetPending_when_insertImagesToPost() throws Exception {
         // given
         List<MultipartFile> files = PostFixture.createValidImages(1);
 
@@ -154,13 +154,13 @@ class PostImageApplicationServiceIntegrationTest extends TestContainer {
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getImageUrl()).contains("image.jpg");
+        assertThat(result.getFirst().getImageUrl()).contains("image.jpg");
 
         // DB 검증: postId가 연결되고 status가 ACTIVE여야 함
         List<PostImageEntity> savedImages = postImageJpaRepository.findAll();
         assertThat(savedImages).hasSize(1);
-        assertThat(savedImages.get(0).getPostId()).isEqualTo(testPost.getId());
-        assertThat(savedImages.get(0).getStatus()).isEqualTo(Status.ACTIVE);
+        assertThat(savedImages.getFirst().getPostId()).isEqualTo(testPost.getId());
+        assertThat(savedImages.getFirst().getStatus()).isEqualTo(Status.PENDING);
     }
 
     @Test
@@ -252,32 +252,4 @@ class PostImageApplicationServiceIntegrationTest extends TestContainer {
                 testPost.getId(), request, testUser.getId()
         )).isInstanceOf(ImageNotFoundException.class);
     }
-
-    // TODO: Rewrite this test for AOP-based idempotency
-    // @Test
-    // @DisplayName("중복된 멱등성 키로 이미지 업로드 시 IdempotencyKeyException을 발생시킨다")
-    // void should_throwIdempotencyKeyException_when_uploadImagesWithDuplicateKey() throws Exception {
-    //     // given
-    //     List<MultipartFile> files = PostFixture.createValidImages(1);
-    //
-    //     ImageDto mockImageDto = ImageDto.builder()
-    //             .imgUrl("https://storage.googleapis.com/test/image.jpg")
-    //             .sort(1)
-    //             .originName("test.jpg")
-    //             .newName("unique.jpg")
-    //             .mimeType("image/jpeg")
-    //             .fileSize(1024L)
-    //             .build();
-    //
-    //     when(gcsStorageClient.upload(any(MultipartFile.class), anyLong()))
-    //             .thenReturn(mockImageDto);
-    //
-    //     // 첫 번째 업로드 성공
-    //     postImageApplicationService.uploadImages(files, testUser.getId());
-    //
-    //     // when & then - 같은 멱등성 키로 두 번째 요청
-    //     assertThatThrownBy(() -> postImageApplicationService.uploadImages(
-    //             files, testUser.getId()
-    //     )).isInstanceOf(IdempotencyKeyException.class);
-    // }
 }

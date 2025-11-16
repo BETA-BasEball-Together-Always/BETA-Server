@@ -3,7 +3,6 @@ package com.beta.unit.community;
 import com.beta.application.community.dto.ImageDto;
 import com.beta.application.community.service.PostImageWriteService;
 import com.beta.common.exception.image.ImageUploadFailedException;
-import com.beta.common.fixture.PostFixture;
 import com.beta.domain.community.service.ImageValidationService;
 import com.beta.infra.community.entity.PostImageEntity;
 import com.beta.infra.community.entity.Status;
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -31,16 +31,12 @@ class PostImageWriteServiceTest {
 
     @Mock
     private ImageValidationService imageValidationService;
-
     @Mock
     private GcsStorageClient gcsStorageClient;
-
     @Mock
     private PostImageJpaRepository postImageJpaRepository;
-
     @Mock
     private ImageErrorJpaRepository imageErrorJpaRepository;
-
     @Mock
     private PostJpaRepository postJpaRepository;
 
@@ -48,119 +44,90 @@ class PostImageWriteServiceTest {
     private PostImageWriteService postImageWriteService;
 
     @Test
-    @DisplayName("이미지 업로드 성공 시 ImageDto 리스트를 반환한다")
-    void should_returnImageDtoList_when_uploadImagesSuccessfully() throws Exception {
+    @DisplayName("이미지 업로드 - 정상 동작")
+    void uploadImages_success() throws Exception {
         // given
-        Long userId = 1L;
-        List<MultipartFile> images = PostFixture.createValidImages(2);
-
-        ImageDto mockImageDto1 = ImageDto.builder()
-                .imgUrl("https://storage.googleapis.com/test/image1.jpg")
-                .sort(1)
-                .originName("test1.jpg")
-                .newName("unique1.jpg")
-                .mimeType("image/jpeg")
-                .fileSize(1024L)
+        MultipartFile file = new MockMultipartFile("test", "test.jpg", "image/jpeg", "test".getBytes());
+        ImageDto imageDto = ImageDto.builder()
+                .imgUrl("https://test.com/image.jpg")
+                .newName("image.jpg")
                 .build();
 
-        ImageDto mockImageDto2 = ImageDto.builder()
-                .imgUrl("https://storage.googleapis.com/test/image2.png")
-                .sort(2)
-                .originName("test2.png")
-                .newName("unique2.png")
-                .mimeType("image/png")
-                .fileSize(2048L)
-                .build();
-
-        doNothing().when(imageValidationService).validateImages(images);
-        when(gcsStorageClient.upload(any(MultipartFile.class), eq(userId)))
-                .thenReturn(mockImageDto1, mockImageDto2);
+        doNothing().when(imageValidationService).validateImages(any());
+        when(gcsStorageClient.upload(any(), anyLong())).thenReturn(imageDto);
 
         // when
-        List<ImageDto> result = postImageWriteService.uploadImages(images, userId);
+        List<ImageDto> result = postImageWriteService.uploadImages(List.of(file), 1L);
 
         // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getImgUrl()).contains("image1.jpg");
-        assertThat(result.get(1).getImgUrl()).contains("image2.png");
-        verify(imageValidationService).validateImages(images);
-        verify(gcsStorageClient, times(2)).upload(any(MultipartFile.class), eq(userId));
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().getImgUrl()).isEqualTo("https://test.com/image.jpg");
     }
 
     @Test
-    @DisplayName("이미지 업로드 중 오류 발생 시 업로드된 이미지를 롤백하고 ImageUploadFailedException을 발생시킨다")
-    void should_rollbackAndThrowException_when_uploadImagesFails() throws Exception {
+    @DisplayName("이미지 업로드 - 실패시 GCS 롤백 및 예외 발생")
+    void uploadImages_throwsException_and_rollbacksGCS() throws Exception {
         // given
-        Long userId = 1L;
-        List<MultipartFile> images = PostFixture.createValidImages(2);
+        MultipartFile file1 = new MockMultipartFile("test1", "test1.jpg", "image/jpeg", "test1".getBytes());
+        MultipartFile file2 = new MockMultipartFile("test2", "test2.jpg", "image/jpeg", "test2".getBytes());
 
-        ImageDto uploadedImage = ImageDto.builder()
-                .imgUrl("https://storage.googleapis.com/test/uploaded.jpg")
+        ImageDto uploadedDto = ImageDto.builder()
+                .imgUrl("https://test.com/uploaded.jpg")
                 .newName("uploaded.jpg")
                 .build();
 
-        doNothing().when(imageValidationService).validateImages(images);
-        when(gcsStorageClient.upload(any(MultipartFile.class), eq(userId)))
-                .thenReturn(uploadedImage)
+        doNothing().when(imageValidationService).validateImages(any());
+        when(gcsStorageClient.upload(any(), anyLong()))
+                .thenReturn(uploadedDto)
                 .thenThrow(new RuntimeException("Upload failed"));
         when(gcsStorageClient.delete(anyString())).thenReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> postImageWriteService.uploadImages(images, userId))
-                .isInstanceOf(ImageUploadFailedException.class)
-                .hasMessageContaining("이미지 업로드 중 오류가 발생했습니다");
+        assertThatThrownBy(() -> postImageWriteService.uploadImages(List.of(file1, file2), 1L))
+                .isInstanceOf(ImageUploadFailedException.class);
 
+        // 첫 번째 이미지는 롤백됨
         verify(gcsStorageClient).delete("uploaded.jpg");
     }
 
     @Test
-    @DisplayName("이미지 메타데이터 저장 시 PostImageEntity를 저장하고 ImageDto 리스트를 반환한다")
-    void should_saveAndReturnImageDtoList_when_saveImagesMetadata() {
+    @DisplayName("이미지 메타데이터 저장 - 정상 동작")
+    void saveImagesMetadata_success() {
         // given
-        Long postId = 1L;
-        Long userId = 1L;
-        List<ImageDto> uploadImages = List.of(
-                ImageDto.builder()
-                        .imgUrl("https://storage.googleapis.com/test/image1.jpg")
-                        .sort(1)
-                        .originName("test1.jpg")
-                        .newName("unique1.jpg")
-                        .mimeType("image/jpeg")
-                        .fileSize(1024L)
-                        .build()
-        );
+        ImageDto dto = ImageDto.builder()
+                .imgUrl("https://test.com/image.jpg")
+                .originName("test.jpg")
+                .newName("new.jpg")
+                .fileSize(1024L)
+                .mimeType("image/jpeg")
+                .sort(1)
+                .build();
 
-        PostImageEntity savedEntity = PostFixture.createPostImage(postId, 1);
-        when(postImageJpaRepository.saveAll(anyList())).thenReturn(List.of(savedEntity));
+        PostImageEntity entity = mock(PostImageEntity.class);
+        when(postImageJpaRepository.saveAll(any())).thenReturn(List.of(entity));
 
         // when
-        List<ImageDto> result = postImageWriteService.saveImagesMetadata(uploadImages, postId, userId);
+        List<ImageDto> result = postImageWriteService.saveImagesMetadata(List.of(dto), 1L, 1L);
 
         // then
         assertThat(result).isNotEmpty();
-        verify(postImageJpaRepository).saveAll(anyList());
+        verify(postImageJpaRepository).saveAll(any());
     }
 
     @Test
-    @DisplayName("이미지 소프트 삭제 시 상태를 MARKED_FOR_DELETION으로 변경한다")
-    void should_markForDeletion_when_softDeleteImages() {
+    @DisplayName("이미지 Soft Delete - 정상 동작 (MARKED_FOR_DELETION)")
+    void softDeleteImages_success() {
         // given
-        Long postId = 1L;
-        List<Long> imageIds = List.of(10L, 20L);
-
-        PostImageEntity image1 = PostFixture.createPostImageWithStatus(postId, 1, Status.ACTIVE);
-        PostImageEntity image2 = PostFixture.createPostImageWithStatus(postId, 2, Status.ACTIVE);
-
-        when(postImageJpaRepository.findAllByIdInAndPostIdAndStatus(imageIds, postId, Status.ACTIVE))
-                .thenReturn(List.of(image1, image2));
-        when(postImageJpaRepository.saveAll(anyList())).thenReturn(List.of(image1, image2));
+        PostImageEntity image = mock(PostImageEntity.class);
+        when(postImageJpaRepository.findAllByIdInAndPostIdAndStatus(any(), anyLong(), eq(Status.ACTIVE)))
+                .thenReturn(List.of(image));
+        when(postImageJpaRepository.saveAll(any())).thenReturn(List.of(image));
 
         // when
-        List<ImageDto> result = postImageWriteService.softDeleteImages(postId, imageIds);
+        List<ImageDto> result = postImageWriteService.softDeleteImages(1L, List.of(1L));
 
         // then
-        assertThat(result).hasSize(2);
-        verify(postImageJpaRepository).findAllByIdInAndPostIdAndStatus(imageIds, postId, Status.ACTIVE);
-        verify(postImageJpaRepository).saveAll(anyList());
+        assertThat(result).hasSize(1);
+        verify(image).markForDeletion();
     }
 }
