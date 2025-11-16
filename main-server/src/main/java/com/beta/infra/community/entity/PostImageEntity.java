@@ -63,20 +63,4 @@ public class PostImageEntity extends BaseEntity {
     public void softDelete() {
         this.status = Status.DELETED;
     }
-
-    public void imageActivateAndSort(Long postId, int sort) {
-        this.postId = postId;
-        this.sort = sort;
-        this.status = Status.ACTIVE;
-    }
-
-    public void imageRollback() {
-        this.postId = null;
-        this.sort = 0;
-        this.status = Status.PENDING;
-    }
-    /* test 용 */
-    public void testIdSet(Long id) {
-        super.testIdSet(id);
-    }
 }
