@@ -24,15 +24,4 @@ public class HashtagEntity extends BaseEntity {
         this.tagName = tagName;
         this.usageCount = 0L;
     }
-
-    // 비즈니스 메서드
-    public void incrementUsageCount() {
-        this.usageCount++;
-    }
-
-    public void decrementUsageCount() {
-        if (this.usageCount > 0) {
-            this.usageCount--;
-        }
-    }
 }

@@ -1,7 +1,7 @@
 package com.beta.presentation.community.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,8 +17,12 @@ public class PostContentUpdateRequest {
     @Size(max = 2000, message = "내용은 2000자 이하여야 합니다")
     private String content;
 
+    private List<Long> deleteHashtagIds;
+
+    @Valid
+    @Size(max = 5, message = "이미지는 최대 5개까지 가능합니다")
+    private List<Image> images;
+
     @Size(max = 5, message = "해시태그는 최대 5개까지 가능합니다")
     private List<@Size(max = 20, message = "해시태그는 20자 이하여야 합니다") String> hashtags;
-
-    private List<Long> deleteHashtagIds;
 }

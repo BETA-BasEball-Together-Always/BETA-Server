@@ -30,7 +30,7 @@ public class PostApplicationService {
 
     public PostUploadResponse updatePostContent(Long postId, PostContentUpdateRequest request, Long userId) {
         findUserService.findUserById(userId);
-        postWriteService.updatePostContentAndHashtags(userId, postId, request.getContent(), request.getHashtags(), request.getDeleteHashtagIds());
+        postWriteService.updatePost(userId, postId, request.getContent(), request.getHashtags(), request.getDeleteHashtagIds(), request.getImages());
         return PostUploadResponse.success();
     }
 
