@@ -30,7 +30,6 @@ public class PostImageApplicationService {
         return handleImageUpload(userId, null, images);
     }
 
-    @Transactional
     public List<PostImagesResponse> insertImagesToPost(Long postId, List<MultipartFile> images, Long userId) {
         postReadService.validatePostOwnership(postId, userId);
         postImageReadService.validatePostImage(postId, images.size());

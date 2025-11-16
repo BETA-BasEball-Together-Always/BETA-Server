@@ -66,8 +66,8 @@ public class PostController {
     }
 
     @Idempotent(ttlSeconds = 5)
-    @PatchMapping("/{postId}/content")
-    public ResponseEntity<PostUploadResponse> updateContent(
+    @PatchMapping("/{postId}/update")
+    public ResponseEntity<PostUploadResponse> updatePost(
             @PathVariable Long postId,
             @Valid @RequestBody PostContentUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails

@@ -25,17 +25,4 @@ public class PostCreateRequest {
 
     @Size(max = 5, message = "해시태그는 최대 5개까지 가능합니다")
     private List<@Size(max = 20, message = "해시태그는 20자 이하여야 합니다") String> hashtags;
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Image {
-        @NotNull(message = "이미지 아이디는 필수입니다")
-        private Long imageId;
-
-        @NotNull(message = "정렬 순서는 필수입니다")
-        @Min(value = 1, message = "정렬은 1 이상이어야 합니다")
-        @Max(value = 5, message = "정렬은 5 이하이어야 합니다")
-        private Integer sort;
-    }
 }

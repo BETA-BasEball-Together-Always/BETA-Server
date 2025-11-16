@@ -32,7 +32,6 @@ public class PostImageWriteService {
     private final GcsStorageClient gcsStorageClient;
     private final PostImageJpaRepository postImageJpaRepository;
     private final ImageErrorJpaRepository imageErrorJpaRepository;
-    private final PostJpaRepository postJpaRepository;
 
     @Transactional
     public List<ImageDto> uploadImages(List<MultipartFile> images, Long userId) {
@@ -85,7 +84,7 @@ public class PostImageWriteService {
                     .fileSize(image.getFileSize())
                     .mimeType(image.getMimeType())
                     .sort(image.getSort())
-                    .status(postId == null ? Status.PENDING : Status.ACTIVE)
+                    .status(Status.PENDING)
                     .build())
                 .toList();
 
@@ -101,14 +100,6 @@ public class PostImageWriteService {
         return postImageJpaRepository.saveAll(images).stream()
                 .map(ImageDto::toDto)
                 .toList();
-    }
-
-    public void deletePostImages(Long postId) {
-        List<PostImageEntity> images = postImageJpaRepository.findAllByPostIdAndStatus(postId, Status.MARKED_FOR_DELETION);
-        if(!images.isEmpty()){
-            images.forEach(PostImageEntity::softDelete);
-            postImageJpaRepository.saveAll(images);
-        }
     }
 
     private void saveImageError(String imageUrl, String fileName, Long userId) {
