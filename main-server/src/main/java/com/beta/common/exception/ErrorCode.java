@@ -51,6 +51,12 @@ public enum ErrorCode {
     IMAGE_REQUIRED("IMAGE005", "이미지 파일이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     IMAGE_ORDER_MISMATCH("IMAGE006", "정렬할 이미지 개수와 DB 이미지 개수가 일치하지 않습니다", HttpStatus.BAD_REQUEST),
     IMAGE_NOT_FOUND("IMAGE007", "삭제할 이미지를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+
+    // 댓글 관련 에러
+    COMMENT_NOT_FOUND("COMMENT001", "댓글을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+    COMMENT_ACCESS_DENIED("COMMENT002", "댓글에 대한 권한이 없습니다", HttpStatus.FORBIDDEN),
+    COMMENT_DEPTH_EXCEEDED("COMMENT003", "대댓글은 한 단계까지만 가능합니다", HttpStatus.BAD_REQUEST),
+
     // 서버 에러
     INTERNAL_SERVER_ERROR("SERVER001", "서버 내부 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR);
 
