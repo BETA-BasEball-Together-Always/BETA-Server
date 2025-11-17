@@ -3,6 +3,7 @@ package com.beta.infra.community.entity;
 import com.beta.infra.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,10 +30,32 @@ public class CommentEntity extends BaseEntity {
     @Column(name = "depth", nullable = false)
     private Integer depth = 0;
 
+    @Column(name = "like_count", nullable = false)
+    private Integer likeCount = 0;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status = Status.ACTIVE;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @Builder
+    public CommentEntity(Long postId, Long userId, String content, Long parentId, Integer depth, Integer likeCount) {
+        this.postId = postId;
+        this.userId = userId;
+        this.content = content;
+        this.parentId = parentId;
+        this.depth = depth != null ? depth : 0;
+        this.likeCount = likeCount != null ? likeCount : 0;
+    }
+
+    public void updateContent(String content) {
+        this.content = content;
+    }
+
+    public void softDelete() {
+        this.status = Status.DELETED;
+        this.deletedAt = LocalDateTime.now();
+    }
 }

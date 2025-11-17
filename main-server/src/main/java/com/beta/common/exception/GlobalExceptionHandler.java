@@ -1,6 +1,9 @@
 package com.beta.common.exception;
 
 import com.beta.common.exception.auth.*;
+import com.beta.common.exception.comment.CommentAccessDeniedException;
+import com.beta.common.exception.comment.CommentDepthExceededException;
+import com.beta.common.exception.comment.CommentNotFoundException;
 import com.beta.common.exception.idempotency.IdempotencyKeyException;
 import com.beta.common.exception.image.*;
 import com.beta.common.exception.post.HashtagCountExceededException;
@@ -157,6 +160,39 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.HASHTAG_COUNT_EXCEEDED);
         return ResponseEntity.status(ErrorCode.HASHTAG_COUNT_EXCEEDED.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 댓글을 찾을 수 없음
+     */
+    @ExceptionHandler(CommentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCommentNotFoundException(CommentNotFoundException e) {
+        log.warn("Comment not found: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.COMMENT_NOT_FOUND);
+        return ResponseEntity.status(ErrorCode.COMMENT_NOT_FOUND.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 댓글 접근 권한 없음
+     */
+    @ExceptionHandler(CommentAccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleCommentAccessDeniedException(CommentAccessDeniedException e) {
+        log.warn("Comment access denied: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.COMMENT_ACCESS_DENIED);
+        return ResponseEntity.status(ErrorCode.COMMENT_ACCESS_DENIED.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 댓글 depth 초과
+     */
+    @ExceptionHandler(CommentDepthExceededException.class)
+    public ResponseEntity<ErrorResponse> handleCommentDepthExceededException(CommentDepthExceededException e) {
+        log.warn("Comment depth exceeded: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.COMMENT_DEPTH_EXCEEDED);
+        return ResponseEntity.status(ErrorCode.COMMENT_DEPTH_EXCEEDED.getStatus()).body(errorResponse);
     }
 
     /**
