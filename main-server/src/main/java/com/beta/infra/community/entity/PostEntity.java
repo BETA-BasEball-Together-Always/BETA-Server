@@ -54,6 +54,16 @@ public class PostEntity extends BaseEntity {
         this.deletedAt = LocalDateTime.now();
     }
 
+    public void incrementCommentCount() {
+        this.commentCount++;
+    }
+
+    public void decrementCommentCount() {
+        if (this.commentCount > 0) {
+            this.commentCount--;
+        }
+    }
+
     public enum Channel {
         DOOSAN,
         LG,
