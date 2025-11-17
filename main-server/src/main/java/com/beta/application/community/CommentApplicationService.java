@@ -1,0 +1,40 @@
+package com.beta.application.community;
+
+import com.beta.application.auth.service.FindUserService;
+import com.beta.application.community.dto.CommentDto;
+import com.beta.application.community.service.CommentReadService;
+import com.beta.application.community.service.CommentWriteService;
+import com.beta.presentation.community.response.CommentResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class CommentApplicationService {
+
+    private final CommentWriteService commentWriteService;
+    private final CommentReadService commentReadService;
+    private final FindUserService findUserService;
+
+    public CommentResponse createComment(Long postId, String content, Long parentId, Long userId) {
+        findUserService.findUserById(userId); // 사용자 존재 여부 확인
+        commentWriteService.saveComment(postId, userId, content, parentId);
+        return CommentResponse.success();
+    }
+
+    public CommentResponse updateComment(Long commentId, String content, Long userId) {
+        commentWriteService.updateComment(commentId, userId, content);
+        return CommentResponse.success();
+    }
+
+    public CommentResponse deleteComment(Long commentId, Long userId) {
+        commentWriteService.softDeleteComment(commentId, userId);
+        return CommentResponse.success();
+    }
+
+    public List<CommentDto> getComments(Long postId) {
+        return commentReadService.getCommentsByPostId(postId);
+    }
+}
