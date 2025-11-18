@@ -4,12 +4,8 @@ import com.beta.common.exception.post.HashtagCountExceededException;
 import com.beta.common.exception.post.PostAccessDeniedException;
 import com.beta.common.exception.post.PostNotFoundException;
 import com.beta.infra.community.entity.*;
-import com.beta.infra.community.repository.HashtagJpaRepository;
-import com.beta.infra.community.repository.PostHashtagRepository;
-import com.beta.infra.community.repository.PostImageJpaRepository;
-import com.beta.infra.community.repository.PostJpaRepository;
+import com.beta.infra.community.repository.*;
 import com.beta.presentation.community.request.Image;
-import com.beta.presentation.community.request.PostCreateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +21,7 @@ public class PostWriteService {
     private final PostHashtagRepository postHashtagJpaRepository;
     private final PostImageJpaRepository postImageJpaRepository;
     private final HashtagJpaRepository hashtagJpaRepository;
+    private final EmotionJpaRepository emotionJpaRepository;
 
     @Transactional
     public void savePost(Long userId, Boolean allChannel, String content, String teamCode, List<String> hashtags, List<Image> images) {
@@ -134,5 +131,45 @@ public class PostWriteService {
                 .toList();
 
         postHashtagJpaRepository.saveAll(postHashtags);
+    }
+
+    @Transactional
+    public void updateEmotion(Long postId, String emotionType, Long userId) {
+        if (!postJpaRepository.existsById(postId)) {
+            throw new PostNotFoundException();
+        }
+
+        EmotionEntity.EmotionType newEmotionType = EmotionEntity.EmotionType.valueOf(emotionType.toUpperCase());
+
+        EmotionEntity existingEmotion = emotionJpaRepository.findByPostIdAndUserId(postId, userId).orElse(null);
+
+        if (existingEmotion != null) {
+            if (existingEmotion.getEmotionType() == newEmotionType) {
+                emotionJpaRepository.delete(existingEmotion);
+                updateEmotionCount(postId, newEmotionType, -1);
+            } else {
+                updateEmotionCount(postId, existingEmotion.getEmotionType(), -1);
+                existingEmotion.changeEmotionType(newEmotionType);
+                emotionJpaRepository.save(existingEmotion);
+                updateEmotionCount(postId, newEmotionType, 1);
+            }
+        } else {
+            EmotionEntity newEmotion = EmotionEntity.builder()
+                    .postId(postId)
+                    .userId(userId)
+                    .emotionType(newEmotionType)
+                    .build();
+            emotionJpaRepository.save(newEmotion);
+            updateEmotionCount(postId, newEmotionType, 1);
+        }
+    }
+
+    private void updateEmotionCount(Long postId, EmotionEntity.EmotionType emotionType, int increment) {
+        switch (emotionType) {
+            case LIKE -> postJpaRepository.updateLikeCount(postId, increment);
+            case SAD -> postJpaRepository.updateSadCount(postId, increment);
+            case FUN -> postJpaRepository.updateFunCount(postId, increment);
+            case HYPE -> postJpaRepository.updateHypeCount(postId, increment);
+        }
     }
 }

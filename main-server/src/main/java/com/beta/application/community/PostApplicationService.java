@@ -4,8 +4,10 @@ import com.beta.application.auth.service.FindUserService;
 import com.beta.application.community.dto.HashtagDto;
 import com.beta.application.community.service.HashtagReadService;
 import com.beta.application.community.service.PostWriteService;
+import com.beta.presentation.community.request.EmotionRequest;
 import com.beta.presentation.community.request.PostContentUpdateRequest;
 import com.beta.presentation.community.request.PostCreateRequest;
+import com.beta.presentation.community.response.EmotionResponse;
 import com.beta.presentation.community.response.PostDeleteResponse;
 import com.beta.presentation.community.response.PostUploadResponse;
 import lombok.RequiredArgsConstructor;
@@ -41,5 +43,10 @@ public class PostApplicationService {
 
     public List<HashtagDto> getHashtags() {
         return hashtagReadService.getAllHashtags();
+    }
+
+    public EmotionResponse addOrDeleteEmotion(Long postId, EmotionRequest request, Long userId) {
+        postWriteService.updateEmotion(postId, request.getEmotionType(), userId);
+        return EmotionResponse.success();
     }
 }
