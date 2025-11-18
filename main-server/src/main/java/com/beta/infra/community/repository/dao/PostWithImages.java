@@ -16,7 +16,10 @@ public class PostWithImages {
     private String content;
     private String channel;
     private Integer commentCount;
-    private Integer emotionCount;
+    private Integer likeCount;
+    private Integer sadCount;
+    private Integer funCount;
+    private Integer hypeCount;
     private LocalDateTime createdAt;
     private List<Images> images;
 
