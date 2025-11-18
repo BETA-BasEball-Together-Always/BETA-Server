@@ -29,7 +29,10 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                     post.content,
                     post.channel,
                     post.commentCount,
-                    post.emotionCount,
+                    post.likeCount,
+                    post.sadCount,
+                    post.funCount,
+                    post.hypeCount,
                     post.createdAt,
                     image.id,
                     image.imgUrl,
@@ -48,7 +51,10 @@ public class PostRepositoryCustomImpl implements PostRepositoryCustom {
                                         post.content,
                                         post.channel,
                                         post.commentCount,
-                                        post.emotionCount,
+                                        post.likeCount,
+                                        post.sadCount,
+                                        post.funCount,
+                                        post.hypeCount,
                                         post.createdAt,
                                         GroupBy.list(
                                                 Projections.fields(

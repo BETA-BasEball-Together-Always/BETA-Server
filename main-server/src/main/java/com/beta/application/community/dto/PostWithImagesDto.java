@@ -15,7 +15,10 @@ public class PostWithImagesDto {
     private String content;
     private String channel;
     private Integer commentCount;
-    private Integer emotionCount;
+    private Integer likeCount;
+    private Integer sadCount;
+    private Integer funCount;
+    private Integer hypeCount;
     private LocalDateTime createdAt;
     private List<ImageDto> images;
 
@@ -26,7 +29,10 @@ public class PostWithImagesDto {
                 .content(postWithImages.getContent())
                 .channel(postWithImages.getChannel())
                 .commentCount(postWithImages.getCommentCount())
-                .emotionCount(postWithImages.getEmotionCount())
+                .likeCount(postWithImages.getLikeCount())
+                .funCount(postWithImages.getFunCount())
+                .sadCount(postWithImages.getSadCount())
+                .hypeCount(postWithImages.getHypeCount())
                 .createdAt(postWithImages.getCreatedAt())
                 .images(postWithImages.getImages().stream()
                         .map(image -> ImageDto.builder()

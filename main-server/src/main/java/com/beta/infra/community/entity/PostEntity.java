@@ -32,8 +32,17 @@ public class PostEntity extends BaseEntity {
     @Column(name = "comment_count", nullable = false)
     private Integer commentCount = 0;
 
-    @Column(name = "emotion_count", nullable = false)
-    private Integer emotionCount = 0;
+    @Column(name = "like_count", nullable = false)
+    private Integer likeCount = 0;
+
+    @Column(name = "sad_count", nullable = false)
+    private Integer sadCount = 0;
+
+    @Column(name = "fun_count", nullable = false)
+    private Integer funCount = 0;
+
+    @Column(name = "hype_count", nullable = false)
+    private Integer hypeCount = 0;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -52,16 +61,6 @@ public class PostEntity extends BaseEntity {
     public void softDelete() {
         this.status = Status.DELETED;
         this.deletedAt = LocalDateTime.now();
-    }
-
-    public void incrementCommentCount() {
-        this.commentCount++;
-    }
-
-    public void decrementCommentCount() {
-        if (this.commentCount > 0) {
-            this.commentCount--;
-        }
     }
 
     public enum Channel {

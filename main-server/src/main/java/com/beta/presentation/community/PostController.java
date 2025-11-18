@@ -5,11 +5,7 @@ import com.beta.application.community.PostImageApplicationService;
 import com.beta.common.idempotency.Idempotent;
 import com.beta.common.security.CustomUserDetails;
 import com.beta.presentation.community.request.*;
-import com.beta.presentation.community.response.HashtagListResponse;
-import com.beta.presentation.community.response.ImageDeleteResponse;
-import com.beta.presentation.community.response.PostDeleteResponse;
-import com.beta.presentation.community.response.PostImagesResponse;
-import com.beta.presentation.community.response.PostUploadResponse;
+import com.beta.presentation.community.response.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -85,11 +81,12 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/emotions")
-    public ResponseEntity<?> addOrUpdateEmotion(
+    public ResponseEntity<EmotionResponse> addOrDeleteEmotion(
             @PathVariable Long postId,
-            @Valid @RequestBody EmotionRequest request
+            @Valid @RequestBody EmotionRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(postApplicationService.addOrDeleteEmotion(postId, request, userDetails.userId()));
     }
 
     @GetMapping("/hashtags")
