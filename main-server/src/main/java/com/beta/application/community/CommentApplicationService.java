@@ -1,14 +1,11 @@
 package com.beta.application.community;
 
 import com.beta.application.auth.service.FindUserService;
-import com.beta.application.community.dto.CommentDto;
 import com.beta.application.community.service.CommentReadService;
 import com.beta.application.community.service.CommentWriteService;
 import com.beta.presentation.community.response.CommentResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +31,8 @@ public class CommentApplicationService {
         return CommentResponse.success();
     }
 
-    public List<CommentDto> getComments(Long postId) {
-        return commentReadService.getCommentsByPostId(postId);
+    public CommentResponse commentLike(Long commentId, Long userId) {
+        commentWriteService.toggleLike(commentId, userId);
+        return CommentResponse.success();
     }
 }
