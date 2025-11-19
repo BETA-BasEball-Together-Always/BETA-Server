@@ -37,8 +37,6 @@ class SocialUserInfoServiceTest {
 
         SocialUserInfo expectedUserInfo = SocialUserInfo.builder()
                 .socialId("kakao_12345")
-                .ageRange("20~29")
-                .gender("male")
                 .build();
 
         when(clientFactory.getClient(provider)).thenReturn(socialLoginClient);
@@ -63,8 +61,6 @@ class SocialUserInfoServiceTest {
 
         SocialUserInfo expectedUserInfo = SocialUserInfo.builder()
                 .socialId("naver_67890")
-                .ageRange("30-39")
-                .gender("F")
                 .build();
 
         when(clientFactory.getClient(provider)).thenReturn(socialLoginClient);
