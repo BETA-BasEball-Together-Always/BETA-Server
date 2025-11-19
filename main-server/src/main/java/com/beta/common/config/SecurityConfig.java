@@ -8,6 +8,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -20,6 +22,11 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -41,12 +48,12 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             // 요청별 인증 설정
             .authorizeHttpRequests(auth -> auth
-                // 인증이 필요하지 않은 공개 API
                 .requestMatchers(
-                        "/api/auth/login/**",     // 소셜 로그인
-                        "/api/auth/refresh",   // 토큰 재발급
+                        "/api/auth/login/**",
+                        "/api/auth/refresh",
                         "/api/auth/signup/complete",
-                        "/api/auth/name/**"
+                        "/api/auth/nickname/**",
+                        "/api/auth/email/**"
                 ).permitAll()
                 // 그 외 모든 요청은 인증 필요
                 .anyRequest().authenticated()

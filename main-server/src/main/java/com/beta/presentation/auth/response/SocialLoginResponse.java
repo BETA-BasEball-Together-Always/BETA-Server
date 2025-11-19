@@ -19,7 +19,7 @@ public class SocialLoginResponse {
         if (loginResult.isNewUser()) {
             return SocialLoginResponse.builder()
                     .isNewUser(true)
-                    .userResponse(new NewUserResponse(loginResult.getSignupToken(), loginResult.getTeamList()))
+                    .userResponse(new NewUserResponse(loginResult.getSocial(), loginResult.getTeamList()))
                     .build();
         } else {
             return SocialLoginResponse.builder()
@@ -34,6 +34,6 @@ public class SocialLoginResponse {
     }
 
     private interface UserResponse {}
-    private record NewUserResponse(String signupToken, List<TeamDto> teamList) implements UserResponse {}
+    private record NewUserResponse(String social, List<TeamDto> teamList) implements UserResponse {}
     private record ExistingUserResponse(String accessToken, String refreshToken, UserDto user) implements UserResponse {}
 }

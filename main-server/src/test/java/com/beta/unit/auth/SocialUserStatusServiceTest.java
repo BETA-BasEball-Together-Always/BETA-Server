@@ -43,7 +43,7 @@ class SocialUserStatusServiceTest {
         // given
         User newUser = User.builder()
                 .id(null)
-                .name("신규유저")
+                .nickName("신규유저")
                 .build();
 
         // when
@@ -59,7 +59,7 @@ class SocialUserStatusServiceTest {
         // given
         User existingUser = User.builder()
                 .id(1L)
-                .name("기존유저")
+                .nickName("기존유저")
                 .build();
 
         // when

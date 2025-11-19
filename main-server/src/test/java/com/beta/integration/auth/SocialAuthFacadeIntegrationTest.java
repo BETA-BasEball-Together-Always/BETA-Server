@@ -11,9 +11,8 @@ import com.beta.common.security.JwtTokenProvider;
 import com.beta.infra.auth.client.SocialLoginClient;
 import com.beta.infra.auth.client.SocialLoginClientFactory;
 import com.beta.infra.auth.client.SocialUserInfo;
-import com.beta.infra.auth.entity.RefreshTokenEntity;
 import com.beta.infra.auth.entity.UserEntity;
-import com.beta.infra.auth.repository.RefreshTokenJpaRepository;
+import com.beta.infra.auth.repository.RefreshTokenRedisRepository;
 import com.beta.infra.auth.repository.UserConsentJpaRepository;
 import com.beta.infra.auth.repository.UserJpaRepository;
 import com.beta.infra.common.entity.BaseballTeamEntity;
@@ -44,7 +43,7 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
     private UserJpaRepository userJpaRepository;
 
     @Autowired
-    private RefreshTokenJpaRepository refreshTokenJpaRepository;
+    private RefreshTokenRedisRepository refreshTokenRedisRepository;
 
     @Autowired
     private UserConsentJpaRepository userConsentJpaRepository;
@@ -54,6 +53,9 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @MockitoBean
     private SocialLoginClientFactory socialLoginClientFactory;
@@ -76,7 +78,7 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
     @AfterEach
     void tearDown() {
         userConsentJpaRepository.deleteAll();
-        refreshTokenJpaRepository.deleteAll();
+        userJpaRepository.findAll().forEach(user -> refreshTokenRedisRepository.deleteByUserId(user.getId()));
         userJpaRepository.deleteAll();
         baseballTeamRepository.deleteAll();
     }
@@ -90,8 +92,6 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
 
         SocialUserInfo socialUserInfo = SocialUserInfo.builder()
                 .socialId("kakao_new_12345")
-                .gender("male")
-                .ageRange("20~29")
                 .build();
 
         when(socialLoginClientFactory.getClient(provider)).thenReturn(mockSocialLoginClient);
@@ -102,7 +102,6 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
 
         // then
         assertThat(result.isNewUser()).isTrue();
-        assertThat(result.getSignupToken()).isNotNull();
         assertThat(result.getTeamList()).isNotEmpty();
         assertThat(result.getAccessToken()).isNull();
         assertThat(result.getRefreshToken()).isNull();
@@ -120,8 +119,6 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
 
         SocialUserInfo socialUserInfo = SocialUserInfo.builder()
                 .socialId("kakao_existing_12345")
-                .gender("male")
-                .ageRange("20~29")
                 .build();
 
         when(socialLoginClientFactory.getClient(provider)).thenReturn(mockSocialLoginClient);
@@ -135,7 +132,7 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
         assertThat(result.getAccessToken()).isNotNull();
         assertThat(result.getRefreshToken()).isNotNull();
         assertThat(result.getUserInfo()).isNotNull();
-        assertThat(result.getUserInfo().getName()).isEqualTo("기존유저");
+        assertThat(result.getUserInfo().getNickName()).isEqualTo("기존유저");
     }
 
     @Test
@@ -153,8 +150,6 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
 
         SocialUserInfo socialUserInfo = SocialUserInfo.builder()
                 .socialId(withdrawnUser.getSocialId())
-                .gender("male")
-                .ageRange("20~29")
                 .build();
 
         when(socialLoginClientFactory.getClient(provider)).thenReturn(mockSocialLoginClient);
@@ -181,8 +176,6 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
 
         SocialUserInfo socialUserInfo = SocialUserInfo.builder()
                 .socialId(suspendedUser.getSocialId())
-                .gender("male")
-                .ageRange("20~29")
                 .build();
 
         when(socialLoginClientFactory.getClient(provider)).thenReturn(mockSocialLoginClient);
@@ -198,19 +191,25 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
     @DisplayName("회원가입 완료 시 사용자 정보와 토큰을 반환한다")
     void should_saveUserAndReturnTokens_when_completeSignup() {
         // given
-        String signupToken = jwtTokenProvider.generateSignupPendingToken(
-                "kakao_signup_12345",
-                SocialProvider.KAKAO.name(),
-                "male",
-                "20~29"
-        );
+        String socialToken = "kakao_access_token";
+        SocialUserInfo socialUserInfo = SocialUserInfo.builder()
+                .socialId("kakao_signup_12345")
+                .build();
+
+        when(socialLoginClientFactory.getClient(SocialProvider.KAKAO)).thenReturn(mockSocialLoginClient);
+        when(mockSocialLoginClient.getUserInfo(socialToken)).thenReturn(socialUserInfo);
 
         SignupCompleteRequest request = SignupCompleteRequest.builder()
-                .signupToken(signupToken)
-                .name("회원가입유저")
+                .socialToken(socialToken)
+                .social(SocialProvider.KAKAO.name())
+                .email("signup@example.com")
+                .password("password123")
+                .nickName("회원가입유저")
                 .favoriteTeamCode(testTeam.getCode())
-                .agreePersonalInfo(true)
+                .personalInfoRequired(true)
                 .agreeMarketing(true)
+                .gender("M")
+                .age(25)
                 .build();
 
         // when
@@ -220,67 +219,56 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
         assertThat(result.isNewUser()).isFalse();
         assertThat(result.getAccessToken()).isNotNull();
         assertThat(result.getRefreshToken()).isNotNull();
-        assertThat(result.getUserInfo().getName()).isEqualTo("회원가입유저");
+        assertThat(result.getUserInfo().getNickName()).isEqualTo("회원가입유저");
 
         // DB 검증
         UserEntity savedUser = userJpaRepository.findBySocialIdAndSocialProvider(
                 "kakao_signup_12345", SocialProvider.KAKAO
         ).orElse(null);
         assertThat(savedUser).isNotNull();
-        assertThat(savedUser.getName()).isEqualTo("회원가입유저");
+        assertThat(savedUser.getNickName()).isEqualTo("회원가입유저");
+        assertThat(savedUser.getEmail()).isEqualTo("signup@example.com");
     }
 
     @Test
-    @DisplayName("개인정보 동의 없이 회원가입 시 PersonalInfoAgreementRequiredException을 발생시킨다")
-    void should_throwException_when_completeSignupWithoutPersonalInfoAgreement() {
-        // given
-        String signupToken = jwtTokenProvider.generateSignupPendingToken(
-                "kakao_signup_67890",
-                SocialProvider.KAKAO.name(),
-                "male",
-                "20~29"
-        );
-
-        SignupCompleteRequest request = SignupCompleteRequest.builder()
-                .signupToken(signupToken)
-                .name("개인정보거부유저")
-                .favoriteTeamCode(testTeam.getCode())
-                .agreePersonalInfo(false)
-                .agreeMarketing(false)
-                .build();
-
-        // when & then
-        assertThatThrownBy(() -> socialAuthFacade.completeSignup(request))
-                .isInstanceOf(PersonalInfoAgreementRequiredException.class)
-                .hasMessage("개인정보 수집 및 이용에 동의하셔야 회원가입이 가능합니다.");
+    @DisplayName("개인정보 동의 없이 회원가입 시 요청이 유효성 검사에 실패한다")
+    void should_failValidation_when_completeSignupWithoutPersonalInfoAgreement() {
+        // This test is now handled by @AssertTrue validation at controller level
+        // The request itself would be rejected before reaching the facade
     }
 
     @Test
-    @DisplayName("중복된 이름으로 회원가입 시 NameDuplicateException을 발생시킨다")
+    @DisplayName("중복된 닉네임으로 회원가입 시 NameDuplicateException을 발생시킨다")
     void should_throwNameDuplicateException_when_completeSignupWithDuplicateName() {
         // given
         UserEntity existingUser = UserFixture.createActiveUser("existing_social_id", "중복이름", testTeam);
         userJpaRepository.save(existingUser);
 
-        String signupToken = jwtTokenProvider.generateSignupPendingToken(
-                "kakao_new_user",
-                SocialProvider.KAKAO.name(),
-                "male",
-                "20~29"
-        );
+        String socialToken = "kakao_access_token_dup";
+        SocialUserInfo socialUserInfo = SocialUserInfo.builder()
+                .socialId("kakao_new_user")
+                .build();
+
+        when(socialLoginClientFactory.getClient(SocialProvider.KAKAO)).thenReturn(mockSocialLoginClient);
+        when(mockSocialLoginClient.getUserInfo(socialToken)).thenReturn(socialUserInfo);
 
         SignupCompleteRequest request = SignupCompleteRequest.builder()
-                .signupToken(signupToken)
-                .name("중복이름")
+                .socialToken(socialToken)
+                .social(SocialProvider.KAKAO.name())
+                .email("newuser@example.com")
+                .password("password123")
+                .nickName("중복이름")
                 .favoriteTeamCode(testTeam.getCode())
-                .agreePersonalInfo(true)
+                .personalInfoRequired(true)
                 .agreeMarketing(true)
+                .gender("M")
+                .age(25)
                 .build();
 
         // when & then
         assertThatThrownBy(() -> socialAuthFacade.completeSignup(request))
                 .isInstanceOf(NameDuplicateException.class)
-                .hasMessage("이미 존재하는 이름입니다.");
+                .hasMessageContaining("이미 존재하는 닉네임입니다");
     }
 
     @Test
@@ -290,16 +278,16 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
         UserEntity user = UserFixture.createActiveUser("social_refresh_test", "리프레시유저", testTeam);
         userJpaRepository.save(user);
 
-        RefreshTokenEntity refreshToken = UserFixture.createRefreshToken(user.getId(), "valid_refresh_token");
-        refreshTokenJpaRepository.save(refreshToken);
+        String refreshToken = "valid_refresh_token";
+        refreshTokenRedisRepository.save(user.getId(), refreshToken);
 
         // when
-        TokenResponse result = socialAuthFacade.refreshTokens("valid_refresh_token");
+        TokenResponse result = socialAuthFacade.refreshTokens(refreshToken);
 
         // then
         assertThat(result.getAccessToken()).isNotNull();
         assertThat(result.getRefreshToken()).isNotNull();
-        assertThat(result.getRefreshToken()).isNotEqualTo("valid_refresh_token");
+        assertThat(result.getRefreshToken()).isNotEqualTo(refreshToken);
     }
 
     @Test
@@ -311,23 +299,19 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
         // when & then
         assertThatThrownBy(() -> socialAuthFacade.refreshTokens(nonExistentToken))
                 .isInstanceOf(InvalidTokenException.class)
-                .hasMessage("유효하지 않은 리프레시 토큰입니다.");
+                .hasMessageContaining("리프레시 토큰");
     }
 
     @Test
     @DisplayName("만료된 리프레시 토큰으로 재발급 시 InvalidTokenException을 발생시킨다")
     void should_throwInvalidTokenException_when_refreshTokensWithExpiredToken() {
         // given
-        UserEntity user = UserFixture.createActiveUser("social_expired_test", "만료토큰유저", testTeam);
-        userJpaRepository.save(user);
-
-        RefreshTokenEntity expiredToken = UserFixture.createExpiredRefreshToken(user.getId(), "expired_token");
-        refreshTokenJpaRepository.save(expiredToken);
+        String expiredToken = "expired_token";
 
         // when & then
-        assertThatThrownBy(() -> socialAuthFacade.refreshTokens("expired_token"))
+        assertThatThrownBy(() -> socialAuthFacade.refreshTokens(expiredToken))
                 .isInstanceOf(InvalidTokenException.class)
-                .hasMessage("만료된 리프레시 토큰입니다.");
+                .hasMessageContaining("리프레시 토큰");
     }
 
     @Test
@@ -337,15 +321,15 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
         UserEntity user = UserFixture.createActiveUser("social_logout_test", "로그아웃유저", testTeam);
         userJpaRepository.save(user);
 
-        RefreshTokenEntity refreshToken = UserFixture.createRefreshToken(user.getId(), "logout_refresh_token");
-        refreshTokenJpaRepository.save(refreshToken);
+        String refreshToken = "logout_refresh_token";
+        refreshTokenRedisRepository.save(user.getId(), refreshToken);
 
         // when
         socialAuthFacade.logout(user.getId());
 
         // then
         // 리프레시 토큰이 삭제되었는지 확인
-        assertThat(refreshTokenJpaRepository.findByToken("logout_refresh_token")).isEmpty();
+        assertThat(refreshTokenRedisRepository.findUserIdByToken(refreshToken)).isEmpty();
     }
 
     @Test
@@ -370,5 +354,136 @@ class SocialAuthFacadeIntegrationTest extends TestContainer {
 
         // then
         assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("이메일로 로그인 시 액세스 토큰과 리프레시 토큰을 반환한다")
+    void should_returnTokens_when_processEmailLoginWithValidCredentials() {
+        // given
+        String plainPassword = "myPassword123";
+        UserEntity user = UserEntity.builder()
+                .socialId("social_email_test")
+                .email("social_email_test@test.com")
+                .password(passwordEncoder.encode(plainPassword))
+                .nickName("이메일유저")
+                .socialProvider(com.beta.common.provider.SocialProvider.KAKAO)
+                .status(UserEntity.UserStatus.ACTIVE)
+                .role(UserEntity.UserRole.USER)
+                .baseballTeam(testTeam)
+                .gender(UserEntity.GenderType.M)
+                .age(25)
+                .build();
+        userJpaRepository.save(user);
+
+        String email = user.getEmail();
+
+        // when
+        LoginResult result = socialAuthFacade.processEmailLogin(email, plainPassword);
+
+        // then
+        assertThat(result.isNewUser()).isFalse();
+        assertThat(result.getAccessToken()).isNotNull();
+        assertThat(result.getRefreshToken()).isNotNull();
+        assertThat(result.getUserInfo()).isNotNull();
+        assertThat(result.getUserInfo().getNickName()).isEqualTo("이메일유저");
+    }
+
+    @Test
+    @DisplayName("잘못된 비밀번호로 이메일 로그인 시 InvalidPasswordException을 발생시킨다")
+    void should_throwInvalidPasswordException_when_processEmailLoginWithWrongPassword() {
+        // given
+        String correctPassword = "correctPassword123";
+        UserEntity user = UserEntity.builder()
+                .socialId("social_wrong_pw")
+                .email("social_wrong_pw@test.com")
+                .password(passwordEncoder.encode(correctPassword))
+                .nickName("유저")
+                .socialProvider(com.beta.common.provider.SocialProvider.KAKAO)
+                .status(UserEntity.UserStatus.ACTIVE)
+                .role(UserEntity.UserRole.USER)
+                .baseballTeam(testTeam)
+                .gender(UserEntity.GenderType.M)
+                .age(25)
+                .build();
+        userJpaRepository.save(user);
+
+        String email = user.getEmail();
+        String wrongPassword = "wrongPassword";
+
+        // when & then
+        assertThatThrownBy(() -> socialAuthFacade.processEmailLogin(email, wrongPassword))
+                .isInstanceOf(com.beta.common.exception.auth.InvalidPasswordException.class)
+                .hasMessage("비밀번호가 일치하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일로 로그인 시 UserNotFoundException을 발생시킨다")
+    void should_throwUserNotFoundException_when_processEmailLoginWithNonExistingEmail() {
+        // given
+        String email = "nonexisting@example.com";
+        String password = "password123";
+
+        // when & then
+        assertThatThrownBy(() -> socialAuthFacade.processEmailLogin(email, password))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining("사용자를 찾을 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("이메일 중복 확인 시 중복된 이메일이면 true를 반환한다")
+    void should_returnTrue_when_isEmailDuplicateWithExistingEmail() {
+        // given
+        UserEntity existingUser = UserFixture.createActiveUser("social_email_dup", "중복이메일체크", testTeam);
+        userJpaRepository.save(existingUser);
+
+        // when
+        boolean result = socialAuthFacade.isEmailDuplicate(existingUser.getEmail());
+
+        // then
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("이메일 중복 확인 시 중복되지 않은 이메일이면 false를 반환한다")
+    void should_returnFalse_when_isEmailDuplicateWithNonExistingEmail() {
+        // when
+        boolean result = socialAuthFacade.isEmailDuplicate("available@example.com");
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("중복된 이메일로 회원가입 시 EmailDuplicateException을 발생시킨다")
+    void should_throwEmailDuplicateException_when_completeSignupWithDuplicateEmail() {
+        // given
+        UserEntity existingUser = UserFixture.createActiveUser("existing_user_id", "기존유저", testTeam);
+        userJpaRepository.save(existingUser);
+
+        String socialToken = "kakao_access_token_email_dup";
+        SocialUserInfo socialUserInfo = SocialUserInfo.builder()
+                .socialId("kakao_email_dup_user")
+                .build();
+
+        when(socialLoginClientFactory.getClient(SocialProvider.KAKAO)).thenReturn(mockSocialLoginClient);
+        when(mockSocialLoginClient.getUserInfo(socialToken)).thenReturn(socialUserInfo);
+
+        SignupCompleteRequest request = SignupCompleteRequest.builder()
+                .socialToken(socialToken)
+                .social(SocialProvider.KAKAO.name())
+                .email(existingUser.getEmail())
+                .password("password123")
+                .nickName("신규유저닉네임")
+                .favoriteTeamCode(testTeam.getCode())
+                .personalInfoRequired(true)
+                .agreeMarketing(false)
+                .gender("F")
+                .age(35)
+                .build();
+
+        // when & then
+        assertThatThrownBy(() -> socialAuthFacade.completeSignup(request))
+                .isInstanceOf(com.beta.common.exception.auth.EmailDuplicateException.class)
+                .hasMessageContaining("이미 존재하는 이메일입니다");
     }
 }

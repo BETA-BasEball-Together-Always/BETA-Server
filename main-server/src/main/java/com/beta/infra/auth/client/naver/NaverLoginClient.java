@@ -47,8 +47,6 @@ public class NaverLoginClient implements SocialLoginClient {
 
             return SocialUserInfo.builder()
                     .socialId(socialId)
-                    .gender(response.getGender())
-                    .ageRange(response.getAgeRange())
                     .build();
 
         } catch (WebClientResponseException.Unauthorized e) {

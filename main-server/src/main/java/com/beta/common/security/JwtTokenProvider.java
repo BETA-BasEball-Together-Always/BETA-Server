@@ -24,22 +24,6 @@ public class JwtTokenProvider {
         this.accessTokenExpiration = accessTokenExpiration;
     }
 
-    public String generateSignupPendingToken(String socialId, String provider, String gender, String ageRange) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
-
-        return Jwts.builder()
-                .subject(socialId)
-                .claim(ClaimEnum.TYPE.name(), "SIGNUP_PENDING")
-                .claim(ClaimEnum.PROVIDER.name(), provider)
-                .claim(ClaimEnum.GENDER.name(), gender)
-                .claim(ClaimEnum.AGE_RANGE.name(), ageRange)
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(secretKey)
-                .compact();
-    }
-
     public String generateAccessToken(Long userId, String favoriteTeamCode, String role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpiration);

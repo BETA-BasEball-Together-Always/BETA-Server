@@ -29,12 +29,14 @@ public enum ErrorCode {
     
     // 동의 관련 에러
     PERSONAL_INFO_AGREEMENT_REQUIRED("CONSENT001", "개인정보 수집 및 이용에 대한 필수 동의가 필요합니다", HttpStatus.BAD_REQUEST),
-    
+
     // 사용자 관련 에러
     USER_NOT_FOUND("USER001", "사용자를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
     USER_WITHDRAWN("USER002", "탈퇴한 사용자입니다", HttpStatus.FORBIDDEN),
     USER_SUSPENDED("USER003", "정지된 사용자입니다", HttpStatus.FORBIDDEN),
     NAME_DUPLICATE("USER004", "이미 존재하는 이름입니다", HttpStatus.CONFLICT),
+    INVALID_PASSWORD("USER005", "비밀번호가 일치하지 않습니다", HttpStatus.UNAUTHORIZED),
+    EMAIL_DUPLICATE("USER006", "이미 존재하는 이메일입니다", HttpStatus.CONFLICT),
     // 구단 관련 에러
     TEAM_NOT_FOUND("TEAM001", "해당 구단은 존재하지 않습니다.", HttpStatus.NOT_FOUND),
 

@@ -1,39 +1,30 @@
 package com.beta.application.auth.service;
 
 import com.beta.common.exception.auth.InvalidTokenException;
-import com.beta.infra.auth.entity.RefreshTokenEntity;
-import com.beta.infra.auth.repository.RefreshTokenJpaRepository;
+import com.beta.infra.auth.repository.RefreshTokenRedisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
 
-    private final RefreshTokenJpaRepository refreshTokenJpaRepository;
+    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
 
-    @Transactional
     public void upsertRefreshToken(Long userId, String refreshToken) {
-        refreshTokenJpaRepository.deleteByUserId(userId);
-        refreshTokenJpaRepository.save(RefreshTokenEntity.builder()
-                .userId(userId)
-                .token(refreshToken)
-                .expiresAt(LocalDateTime.now().plusMonths(1))
-                .build());
+        refreshTokenRedisRepository.save(userId, refreshToken);
     }
 
-    @Transactional(readOnly = true)
-    public RefreshTokenEntity findByToken(String token) {
-        return refreshTokenJpaRepository.findByToken(token)
-                .orElseThrow(() -> new InvalidTokenException("유효하지 않은 리프레시 토큰입니다."));
+    /**
+     * RefreshToken으로 userId 조회
+     * @throws InvalidTokenException RefreshToken이 유효하지 않거나 만료된 경우
+     */
+    public Long findUserIdByToken(String refreshToken) {
+        return refreshTokenRedisRepository.findUserIdByToken(refreshToken)
+                .orElseThrow(() -> new InvalidTokenException("유효하지 않거나 만료된 리프레시 토큰입니다."));
     }
 
-    @Transactional
     public void deleteByUserId(Long userId) {
-        refreshTokenJpaRepository.deleteByUserId(userId);
+        refreshTokenRedisRepository.deleteByUserId(userId);
     }
 }

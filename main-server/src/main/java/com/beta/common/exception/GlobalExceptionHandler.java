@@ -33,6 +33,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ErrorCode.NAME_DUPLICATE.getStatus()).body(errorResponse);
     }
 
+    @ExceptionHandler(EmailDuplicateException.class)
+    public ResponseEntity<ErrorResponse> handleEmailDuplicateException(EmailDuplicateException e) {
+        log.warn("Email duplicate exception: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.EMAIL_DUPLICATE);
+        return ResponseEntity.status(ErrorCode.EMAIL_DUPLICATE.getStatus()).body(errorResponse);
+    }
+
     /**
      * @Valid 어노테이션으로 validation이 실패한 경우
      */
@@ -58,7 +66,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PersonalInfoAgreementRequiredException.class)
     public ResponseEntity<ErrorResponse> handlePersonalInfoAgreementRequiredException(PersonalInfoAgreementRequiredException e) {
         log.warn("Personal info agreement required: {}", e.getMessage());
-        
+
         ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.PERSONAL_INFO_AGREEMENT_REQUIRED);
         return ResponseEntity.status(ErrorCode.PERSONAL_INFO_AGREEMENT_REQUIRED.getStatus()).body(errorResponse);
     }
@@ -116,6 +124,17 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.USER_NOT_FOUND);
         return ResponseEntity.status(ErrorCode.USER_NOT_FOUND.getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 비밀번호 불일치
+     */
+    @ExceptionHandler(InvalidPasswordException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPasswordException(InvalidPasswordException e) {
+        log.warn("Invalid password: {}", e.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_PASSWORD);
+        return ResponseEntity.status(ErrorCode.INVALID_PASSWORD.getStatus()).body(errorResponse);
     }
 
     /**

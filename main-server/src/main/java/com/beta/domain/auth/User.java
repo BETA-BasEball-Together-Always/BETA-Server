@@ -8,13 +8,15 @@ import lombok.Getter;
 @Builder
 public class User {
     private Long id;
+    private String email;
+    private String password;
     private String socialId;
-    private String name;
+    private String nickName;
     private SocialProvider socialProvider;
     private String favoriteTeamCode;
     private String favoriteTeamName;
     private String gender;
-    private String ageRange;
+    private Integer age;
     private String status;
     private String role;
 

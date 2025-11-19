@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class FindUserService {
+public class UserReadService {
 
     private final UserJpaRepository userJpaRepository;
 
@@ -21,13 +21,24 @@ public class FindUserService {
     }
 
     @Transactional(readOnly = true)
-    public boolean isNameDuplicate(String name) {
-        return userJpaRepository.existsByName(name);
+    public boolean isNameDuplicate(String nickName) {
+        return userJpaRepository.existsByNickName(nickName);
     }
-    
+
+    @Transactional(readOnly = true)
+    public boolean isEmailDuplicate(String email) {
+        return userJpaRepository.existsByEmail(email);
+    }
+
     @Transactional(readOnly = true)
     public User findUserById(Long userId) {
         return UserMapper.toDomain(userJpaRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId)));
+    }
+
+    @Transactional(readOnly = true)
+    public User findUserByEmail(String email) {
+        return UserMapper.toDomain(userJpaRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. email: " + email)));
     }
 }
