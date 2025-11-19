@@ -20,11 +20,11 @@ public class UserConsentEntity extends BaseEntity {
     @Column(name = "user_id", nullable = false, unique = true)
     private Long userId;
 
-    @Column(name = "agree_personal_info", nullable = false)
-    private Boolean agreePersonalInfo;
+    @Column(name = "personal_info_required", nullable = false)
+    private Boolean personalInfoRequired;
 
-    @Column(name = "agree_personal_info_at")
-    private LocalDateTime agreePersonalInfoAt;
+    @Column(name = "personal_info_required_at")
+    private LocalDateTime personalInfoRequiredAt;
 
     @Column(name = "agree_marketing", nullable = false)
     private Boolean agreeMarketing;
@@ -33,10 +33,10 @@ public class UserConsentEntity extends BaseEntity {
     private LocalDateTime agreeMarketingAt;
 
     @Builder
-    public UserConsentEntity(Long userId, Boolean agreePersonalInfo, Boolean agreeMarketing) {
+    public UserConsentEntity(Long userId, Boolean personalInfoRequired, Boolean agreeMarketing) {
         this.userId = userId;
-        this.agreePersonalInfo = agreePersonalInfo;
-        this.agreePersonalInfoAt = agreePersonalInfo ? LocalDateTime.now() : null;
+        this.personalInfoRequired = personalInfoRequired;
+        this.personalInfoRequiredAt = personalInfoRequired ? LocalDateTime.now() : null;
         this.agreeMarketing = agreeMarketing;
         this.agreeMarketingAt = agreeMarketing ? LocalDateTime.now() : null;
     }
