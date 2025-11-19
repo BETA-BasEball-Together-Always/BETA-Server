@@ -18,11 +18,15 @@ public class UserMapper {
         }
         return User.builder()
                 .id(entity.getId())
+                .email(entity.getEmail())
+                .password(entity.getPassword())
                 .socialId(entity.getSocialId())
-                .name(entity.getName())
+                .nickName(entity.getNickName())
                 .socialProvider(entity.getSocialProvider())
                 .favoriteTeamCode(entity.getBaseballTeam().getCode())
                 .favoriteTeamName(entity.getBaseballTeam().getTeamNameKr())
+                .gender(entity.getGender() != null ? entity.getGender().name() : null)
+                .age(entity.getAge())
                 .status(entity.getStatus().name())
                 .role(entity.getRole().name())
                 .build();
@@ -34,15 +38,16 @@ public class UserMapper {
         }
 
         UserEntity.GenderType genderType = getGenderType(dto);
-        UserEntity.AgeRange ageRange = getAgeRange(dto);
 
         return UserEntity.builder()
+                .email(dto.getEmail())
+                .password(dto.getPassword())
                 .socialId(dto.getSocialId())
-                .name(dto.getName())
+                .nickName(dto.getNickName())
                 .socialProvider(dto.getSocialProvider())
                 .baseballTeam(baseballTeamEntity)
                 .gender(genderType)
-                .ageRange(ageRange)
+                .age(dto.getAge())
                 .build();
     }
 
@@ -50,7 +55,7 @@ public class UserMapper {
         return UserDto.builder()
                 .id(user.getId())
                 .socialId(user.getSocialId())
-                .name(user.getName())
+                .nickName(user.getNickName())
                 .socialProvider(user.getSocialProvider())
                 .favoriteTeamCode(user.getFavoriteTeamCode())
                 .favoriteTeamName(user.getFavoriteTeamName())
@@ -62,13 +67,13 @@ public class UserMapper {
         return UserDto.builder()
                 .id(user.getId())
                 .socialId(user.getSocialId())
-                .name(user.getName())
+                .nickName(user.getNickName())
                 .socialProvider(user.getSocialProvider())
                 .favoriteTeamCode(user.getBaseballTeam().getCode())
                 .favoriteTeamName(user.getBaseballTeam().getTeamNameKr())
                 .role(user.getRole().name())
                 .gender(user.getGender() != null ? user.getGender().name() : null)
-                .ageRange(user.getAgeRange() != null ? user.getAgeRange().name() : null)
+                .age(user.getAge())
                 .build();
     }
 
@@ -88,21 +93,5 @@ public class UserMapper {
             genderType = dto.getGender().toLowerCase().startsWith("m") ? UserEntity.GenderType.M : UserEntity.GenderType.F;
         }
         return genderType;
-    }
-
-    private static UserEntity.AgeRange getAgeRange(UserDto dto) {
-        UserEntity.AgeRange ageRange = null;
-        if(dto.getAgeRange() != null) {
-            ageRange = switch (dto.getAgeRange()) {
-                case "0-9" -> UserEntity.AgeRange.AGE_0_9;
-                case "10-19" -> UserEntity.AgeRange.AGE_10_19;
-                case "20-29" -> UserEntity.AgeRange.AGE_20_29;
-                case "30-39" -> UserEntity.AgeRange.AGE_30_39;
-                case "40-49" -> UserEntity.AgeRange.AGE_40_49;
-                case "50-59" -> UserEntity.AgeRange.AGE_50_59;
-                default -> UserEntity.AgeRange.AGE_60_ABOVE;
-            };
-        }
-        return ageRange;
     }
 }

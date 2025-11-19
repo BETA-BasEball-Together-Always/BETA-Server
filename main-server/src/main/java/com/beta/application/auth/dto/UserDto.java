@@ -8,12 +8,14 @@ import lombok.Getter;
 @Builder
 public class UserDto {
     private Long id;
+    private String email;
+    private String password;
     private String socialId;
-    private String name;
+    private String nickName;
     private SocialProvider socialProvider;
     private String favoriteTeamCode;
     private String favoriteTeamName;
     private String role;
     private String gender;
-    private String ageRange;
+    private Integer age;
 }
