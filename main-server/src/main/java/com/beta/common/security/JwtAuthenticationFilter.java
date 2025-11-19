@@ -112,11 +112,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
 
-        // 인증이 필요하지 않은 경로들
-        return path.startsWith("/api/auth/login/kakao") ||
-               path.startsWith("/api/auth/login/naver") ||
-                path.startsWith("/api/auth/name/check") ||
-               path.startsWith("/api/auth/signup/complete") ||  // 회원가입 완료도 제외
-               path.startsWith("/api/auth/refresh");              // 리프레시도 제외
+        // 인증이 필요하지 않은 경로들 (SecurityConfig의 permitAll과 일치)
+        return path.startsWith("/api/auth/login/") ||           // 소셜 로그인 + 이메일 로그인
+               path.startsWith("/api/auth/signup/complete") ||  // 회원가입 완료
+               path.startsWith("/api/auth/nickname/") ||        // 닉네임 중복 체크
+               path.startsWith("/api/auth/email/") ||           // 이메일 중복 체크
+               path.startsWith("/api/auth/refresh");            // 토큰 리프레시
     }
 }
