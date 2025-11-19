@@ -10,18 +10,4 @@ class KakaoUserInfoResponse {
 
     @JsonProperty("id")
     private Long id;
-
-    @JsonProperty("kakao_account")
-    private KakaoAccount kakaoAccount;
-
-    @Getter
-    @NoArgsConstructor
-    static class KakaoAccount {
-
-        @JsonProperty("age_range")
-        private String ageRange;
-
-        @JsonProperty("gender")
-        private String gender;
-    }
 }

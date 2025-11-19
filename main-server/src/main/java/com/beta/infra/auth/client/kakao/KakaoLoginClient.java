@@ -8,7 +8,6 @@ import com.beta.infra.auth.client.SocialUserInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -32,11 +31,9 @@ public class KakaoLoginClient implements SocialLoginClient {
     @Override
     public SocialUserInfo getUserInfo(String accessToken) {
         try {
-            KakaoUserInfoResponse response = webClient.post()
+            KakaoUserInfoResponse response = webClient.get()
                     .uri(KAKAO_USERINFO_URL)
                     .header("Authorization", "Bearer " + accessToken)
-                    .header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
-                    .body(BodyInserters.fromFormData("property_keys", "[\"kakao_account.age_range\",\"kakao_account.gender\"]"))
                     .retrieve()
                     .bodyToMono(KakaoUserInfoResponse.class)
                     .timeout(TIMEOUT)
@@ -49,8 +46,6 @@ public class KakaoLoginClient implements SocialLoginClient {
 
             return SocialUserInfo.builder()
                     .socialId(String.valueOf(response.getId()))
-                    .ageRange(response.getKakaoAccount() != null ? response.getKakaoAccount().getAgeRange() : null)
-                    .gender(response.getKakaoAccount() != null ? response.getKakaoAccount().getGender() : null)
                     .build();
 
         } catch (WebClientResponseException.Unauthorized e) {

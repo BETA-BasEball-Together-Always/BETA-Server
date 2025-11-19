@@ -15,19 +15,9 @@ class NaverUserInfoResponse {
     @NoArgsConstructor
     static class ResponseData {
         private String id;
-        private String gender;
-        private String age;
     }
 
     public String getSocialId() {
-        return response.getId();
-    }
-
-    public String getGender() {
-        return response != null ? response.getGender() : null;
-    }
-
-    public String getAgeRange() {
-        return response != null ? response.getAge() : null;
+        return response != null ? response.getId() : null;
     }
 }

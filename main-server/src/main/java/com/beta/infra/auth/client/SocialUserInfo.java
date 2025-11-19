@@ -6,6 +6,4 @@ import lombok.*;
 @Builder
 public class SocialUserInfo {
     private String socialId;
-    private String ageRange;
-    private String gender;
 }
