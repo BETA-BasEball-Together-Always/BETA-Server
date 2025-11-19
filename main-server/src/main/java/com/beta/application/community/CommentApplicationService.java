@@ -1,6 +1,6 @@
 package com.beta.application.community;
 
-import com.beta.application.auth.service.FindUserService;
+import com.beta.application.auth.service.UserReadService;
 import com.beta.application.community.service.CommentReadService;
 import com.beta.application.community.service.CommentWriteService;
 import com.beta.presentation.community.response.CommentResponse;
@@ -13,10 +13,10 @@ public class CommentApplicationService {
 
     private final CommentWriteService commentWriteService;
     private final CommentReadService commentReadService;
-    private final FindUserService findUserService;
+    private final UserReadService userReadService;
 
     public CommentResponse createComment(Long postId, String content, Long parentId, Long userId) {
-        findUserService.findUserById(userId); // 사용자 존재 여부 확인
+        userReadService.findUserById(userId); // 사용자 존재 여부 확인
         commentWriteService.saveComment(postId, userId, content, parentId);
         return CommentResponse.success();
     }
